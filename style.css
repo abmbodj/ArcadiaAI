@@ -53,7 +53,7 @@ body {
     color: var(--subheading-color)
 }
 
-.suggestions .suggestions-item {
+.suggestions .suggestion-item {
     padding: 18px;
     width: 228px;
     border-radius: 12px;
