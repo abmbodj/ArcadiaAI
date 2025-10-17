@@ -32,3 +32,17 @@ body {
     padding: 0 20px;
     max-width: 980px;
 }
+
+.container .app-header {
+    margin-top: 4vh;
+}
+
+.app-header .heading {
+    font-size: 3rem;
+    width: fit-content;
+    background: linear-gradient(to right, #A20623, #ffffff);
+    
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
