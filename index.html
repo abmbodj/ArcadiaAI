@@ -2,63 +2,62 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arcadia AI</title>
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=computer" />
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcadia AI</title>
+
+  <!-- ✅ Correct Google Fonts link for Material Symbols -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <div class="container">
-        <header class="app-header">
-            <h1 class="heading">Arcadia AI</h1>
-            <h2 class="subheading">Your AI Companion for a Smarter Tomorrow</h2>
-        </header>
+  <div class="container">
+    <header class="app-header">
+      <h1 class="heading">Arcadia AI</h1>
+      <h2 class="subheading">Your AI Companion for a Smarter Tomorrow</h2>
+    </header>
 
-        <ul class="suggestions">
-            <li class="suggestion-item">
-                <p class="suggestion-text">Where is the IT HelpDesk at Arcadia?</p>
-                <span class="material-symbols-outlined">
-                    computer
-                </span>
-            </li>
+    <ul class="suggestions">
+      <li class="suggestion-item">
+        <p class="suggestion-text">Where is the IT HelpDesk at Arcadia?</p>
+        <span class="material-symbols-outlined">computer</span>
+      </li>
 
-            <li class="suggestion-item">
-                <p class="suggestion-text">What is the weather like at Arcadia?</p>
-                <span class="material-symbols-outlined">
-weather_hail
-</span>
-            </li>
+      <li class="suggestion-item">
+        <p class="suggestion-text">What is the weather like at Arcadia?</p>
+        <span class="material-symbols-outlined">weather_hail</span>
+      </li>
 
-            <li class="suggestion-item">
-                <p class="suggestion-text">What are the times for the Dining Hall at Arcadia?</p>
-                <span class="material-symbols-outlined">
-food_bank
-</span>
-            </li>
+      <li class="suggestion-item">
+        <p class="suggestion-text">What are the times for the Dining Hall at Arcadia?</p>
+        <span class="material-symbols-outlined">food_bank</span>
+      </li>
 
-            <li class="suggestion-item">
-                <p class="suggestion-text">What are the housing options at Arcadia?</p>
-                <span class="material-symbols-outlined">
-                    computer
-                </span>
-            </li>
-        </ul>
+      <li class="suggestion-item">
+        <p class="suggestion-text">What are the housing options at Arcadia?</p>
+        <span class="material-symbols-outlined">bungalow</span>
+      </li>
+    </ul>
 
-        <div class="prompt-container">
-            <div class="prompt-wrapper">
-                <form action="#" class="prompt-form">
-                    <input type="text" placeholder="Ask Archie" class="prompt-input">
-                    <div class="prompt-actions">
-                        <button id="add-file-btn" type="button" class="material-symbols-rounded">attach_file</button>
-                        <button id="send-prompt-btn" class="material-symbols-rounded">arrow_upward</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <div class="prompt-container">
+      <div class="prompt-wrapper">
+        <form action="#" class="prompt-form">
+          <input type="text" placeholder="Ask Archie" class="prompt-input" required>
+          <div class="prompt-actions">
+            <button id="add-file-btn" type="button" class="material-symbols-outlined">attach_file</button>
+            <button id="send-prompt-btn" class="material-symbols-outlined">arrow_upward</button>
+          </div>
+        </form>
+
+        <button id="theme-toggle-btn" class="material-symbols-outlined">light_mode</button>
+        <button id="delete-chats-btn" class="material-symbols-outlined">delete</button>
+      </div>
+
+      <p class="disclaimer-text">Archie can make mistakes. Always make sure the info you are given is correct</p>
     </div>
+  </div>
 </body>
 
 </html>
