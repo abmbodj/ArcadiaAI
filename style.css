@@ -53,3 +53,9 @@ body {
     color: var(--subheading-color)
 }
 
+.suggestions .suggestions-item {
+    padding: 18px;
+    width: 228px;
+    border-radius: 12px;
+    background: var(--secondary-color);
+}
