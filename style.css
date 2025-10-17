@@ -65,6 +65,10 @@ body {
     background: var(--secondary-color);
 }
 
+.suggestions .suggestion-item:hover {
+    background: var(--secondary-hover-color);
+}
+
 .container .suggestions {
     display: flex;
     gap: 15px;
