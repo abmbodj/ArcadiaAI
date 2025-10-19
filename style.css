@@ -80,6 +80,10 @@ body {
     scrollbar-width: none;
 }
 
+.container :is(.app-header, .suggestions) {
+    display: none;
+}
+
 .suggestions .suggestion-item .text {
     font-size: 1.1rem;
 }
@@ -162,4 +166,24 @@ body {
 .prompt-form #send-prompt-btn {
     color: white;
     background: #A20623;
+    display: none;
+    transition: 0.3s ease;
+}
+
+.prompt-form .prompt-input:valid ~ .prompt-actions #send-prompt-btn {
+    display: block;
+}
+
+.prompt-form #send-prompt-btn:hover {
+    background: #c4092b;
+}
+
+.prompt-form .prompt-actions {
+    gap: 5px;
+    margin-right: 7px;
+}
+
+.prompt-form .prompt-actions button {
+    height: 45px;
+    width: 45px;
 }
