@@ -151,3 +151,15 @@ body {
 .prompt-wrapper button:hover {
     background: var(--secondary-hover-color);
 }
+
+.prompt-container .disclaimer-text{
+    text-align: center;
+    font-size: 0.9rem;
+    padding: 16px 20px 0;
+    color: var(--placeholder-color);
+}
+
+.prompt-form #send-prompt-btn {
+    color: white;
+    background: #A20623;
+}
