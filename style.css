@@ -193,11 +193,28 @@ body {
     gap: 11px;
     align-items: center;
 }
+.chats-container .BOT-msg .avi {
+    height: 43px;
+    width: 43px;
+    padding: 6px;
+    align-items: flex-start;
+    margin-right: -7px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    border: 1px solid var(--secondary-hover-color)
+}
+
+
 
 .chats-container .msg .msg-text {
     padding: 3px 16px;
     word-wrap: break-word;
     white-space: pre-line;
+}
+
+.chats-container .user-msg {
+    flex-direction: column;
+    align-items: flex-end;
 }
 
 .chats-container .user-msg .msg-text {
