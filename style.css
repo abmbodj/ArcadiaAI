@@ -145,6 +145,9 @@ body {
     flex-shrink: 0;
     color: var(--text-color);
     background: var(--secondary-color);
+    transition: 0.3s ease;
 }
 
-.prompt-wrapper button
+.prompt-wrapper button:hover {
+    background: var(--secondary-hover-color);
+}
