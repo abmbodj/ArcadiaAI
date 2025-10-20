@@ -1,13 +1,19 @@
-# ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ArchieAI
-Archie AI is an AI-powered assistant designed to help users and students with a variety of tasks, from answering questions to providing recommendations and generating content. Built on Gemini, ArchieAI aims to enhance productivity and make your experince at Arcadia University more efficient and enjoyable.
+<p align="center">
+  <img src="imgs/archieTemo.svg" alt="ArchieAI Logo" width="150"/>
+</p>
+
+<h1 align="center">ArchieAI</h1>
+
+<p align="center">
+  Archie AI is an AI-powered assistant designed to help users and students with a variety of tasks, from answering questions to providing recommendations and generating content. Built on Gemini, ArchieAI aims to enhance productivity and make your experience at Arcadia University more efficient and enjoyable.
+</p>
 
 ## Features
-- Natural Language Understanding: Communicates in a human-like manner.
-- Contextual Awareness: Remembers previous interactions for better responses.
-- Multi-Tasking: Handles a wide range of tasks including writing, research, and data analysis.
-- Customizable: Tailor responses and functionalities to suit individual needs.
-- Integration: Easily integrates with various platforms and applications.
+- **Natural Language Understanding:** Communicates in a human-like manner.  
+- **Contextual Awareness:** Remembers previous interactions for better responses.  
+- **Multi-Tasking:** Handles a wide range of tasks including writing, research, and data analysis.  
+- **Customizable:** Tailor responses and functionalities to suit individual needs.  
+- **Integration:** Easily integrates with various platforms and applications.  
 
 ## Usage
 To use ArchieAI, simply interact with it through your preferred messaging platform or web interface. Ask questions, request assistance, or provide instructions, and ArchieAI will respond accordingly.
-
