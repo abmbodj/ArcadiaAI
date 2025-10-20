@@ -80,9 +80,6 @@ body {
     scrollbar-width: none;
 }
 
-.container :is(.app-header, .suggestions) {
-    display: none;
-}
 
 .suggestions .suggestion-item .text {
     font-size: 1.1rem;
@@ -218,7 +215,7 @@ body {
 }
 
 .prompt-form .prompt-input:valid ~ .prompt-actions #send-prompt-btn {
-    display: block;
+    display: flex;
 }
 
 .prompt-form #send-prompt-btn:hover {

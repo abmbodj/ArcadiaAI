@@ -13,35 +13,19 @@
 
 <body>
   <div class="container">
-    <header class="app-header">
-      <h1 class="heading">ArchieAI</h1>
-      <h2 class="subheading">The knight that helps you!</h2>
-    </header>
 
-    <ul class="suggestions">
-      <li class="suggestion-item">
-        <p class="suggestion-text">Where is the IT HelpDesk at Arcadia?</p>
-        <span class="material-symbols-outlined">computer</span>
-      </li>
-
-      <li class="suggestion-item">
-        <p class="suggestion-text">What is the weather like at Arcadia?</p>
-        <span class="material-symbols-outlined">weather_hail</span>
-      </li>
-
-      <li class="suggestion-item">
-        <p class="suggestion-text">What are the times for the Dining Hall at Arcadia?</p>
-        <span class="material-symbols-outlined">food_bank</span>
-      </li>
-
-      <li class="suggestion-item">
-        <p class="suggestion-text">What are the housing options at Arcadia?</p>
-        <span class="material-symbols-outlined">bungalow</span>
-      </li>
-    </ul>
+    <div class="chats-container">
+      <div class="message user-message">
+        <p class="message-text">this is the user</p>
       </div>
 
-      <div class="prompt-container">
+      <div class="message BOT-message">
+        <img src="imgs/archieTemo.svg" class="avi">
+        <p class="message-text">this is the bot</p>
+      </div>
+    </div>
+
+    <div class="prompt-container">
       <div class="prompt-wrapper">
         <form action="#" class="prompt-form">
           <input type="text" placeholder="Ask Archie!" class="prompt-input" required>
@@ -54,6 +38,7 @@
         <button id="theme-toggle-btn" class="material-symbols-outlined">light_mode</button>
         <button id="delete-chats-btn" class="material-symbols-outlined">delete</button>
       </div>
+
       <p class="disclaimer-text">Archie can make mistakes. Always make sure the info you are given is correct</p>
     </div>
   </div>
