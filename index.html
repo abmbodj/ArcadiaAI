@@ -1,24 +1,34 @@
 <!DOCTYPE html>
+<!-- Main landing page for ArchieAI - displays title, suggestions, and input prompt -->
 <html>
 
 <head>
+  <!-- Meta information for proper text encoding and mobile responsiveness -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arcadia AI</title>
 
+  <!-- Import Google Material Symbols for icons used in UI -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
 
+  <!-- Link to custom stylesheet for page styling -->
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+  <!-- Main container that wraps all content on the page -->
   <div class="container">
+
+    <!-- Header section containing app name and tagline -->
     <header class="app-header">
       <h1 class="heading">ArchieAI</h1>
       <h2 class="subheading">The knight that helps you!</h2>
     </header>
 
+    <!-- List of suggested prompts for quick user questions -->
     <ul class="suggestions">
+
+      <!-- Individual suggestion item with text and matching icon -->
       <li class="suggestion-item">
         <p class="suggestion-text">Where is the IT HelpDesk at Arcadia?</p>
         <span class="material-symbols-outlined">computer</span>
@@ -40,23 +50,34 @@
       </li>
     </ul>
 
+    <!-- Section for user prompt input and control buttons -->
     <div class="prompt-container">
       <div class="prompt-wrapper">
+
+        <!-- Form for submitting user queries to Archie -->
         <form action="#" class="prompt-form">
+          <!-- Input field where user types a question -->
           <input type="text" placeholder="Ask Archie!" class="prompt-input" required>
+
+          <!-- Container for the file and send buttons -->
           <div class="prompt-actions">
+            <!-- Button for attaching files (currently decorative) -->
             <button id="add-file-btn" type="button" class="material-symbols-outlined">attach_file</button>
+            <!-- Button for sending the user's message -->
             <button id="send-prompt-btn" class="material-symbols-outlined">arrow_upward</button>
           </div>
         </form>
 
+        <!-- Button for toggling between light and dark themes -->
         <button id="theme-toggle-btn" class="material-symbols-outlined">light_mode</button>
+        <!-- Button for deleting chat history -->
         <button id="delete-chats-btn" class="material-symbols-outlined">delete</button>
       </div>
-      <p class="disclaimer-text">Archie can make mistakes. Always make sure the info you are given is correct</p>
-      </div>
 
+      <!-- Disclaimer reminding users that AI responses may contain errors -->
+      <p class="disclaimer-text">Archie can make mistakes. Always make sure the info you are given is correct</p>
     </div>
+
   </div>
 </body>
 
