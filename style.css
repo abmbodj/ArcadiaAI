@@ -112,10 +112,9 @@ body {
 }
 
 .chats-container .BOT-message .avi {
-    /* Make the avatar a fixed-size square and preserve its aspect ratio */
     width: 43px;
     height: 43px;
-    box-sizing: content-box; /* padding won't reduce the image's rendered size */
+    box-sizing: content-box;
     border-radius: 50%;
     padding: 6px;
     background: var(--secondary-color);
@@ -123,7 +122,6 @@ body {
     flex-shrink: 0;
     align-self: flex-start;
     margin-right: -7px;
-    /* Ensure the image content keeps its proportions */
     object-fit: contain;
     display: inline-block;
 }
