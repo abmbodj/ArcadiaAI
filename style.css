@@ -26,7 +26,7 @@ body {
     padding: 32px 0 60px;
 }
 
-.container :where(.app-header, .suggestions, .prompt-wrapper, .disclaimer-text .msg) {
+.container :where(.app-header, .suggestions, .message, .prompt-wrapper, .disclaimer-text) {
     margin: 0 auto;
     width: 100%;
     padding: 0 20px;
@@ -99,6 +99,17 @@ body {
     border-radius: 50%;
     color: #A20623;
     background: var(--primary-color);
+}
+
+.chats-container .message {
+    display: flex;
+    gap: 11px;
+    align-items: center;
+}
+.chats-container .message .message-text {
+    padding: 3px 16px;
+    word-wrap: break-word;
+    white-space: pre-line;
 }
 
 .prompt-container {
@@ -188,38 +199,3 @@ body {
     width: 45px;
 }
 
-.chats-container .msg {
-    display: flex;
-    gap: 11px;
-    align-items: center;
-}
-.chats-container .BOT-msg .avi {
-    height: 43px;
-    width: 43px;
-    padding: 6px;
-    align-items: flex-start;
-    margin-right: -7px;
-    border-radius: 50%;
-    background: var(--secondary-color);
-    border: 1px solid var(--secondary-hover-color)
-}
-
-
-
-.chats-container .msg .msg-text {
-    padding: 3px 16px;
-    word-wrap: break-word;
-    white-space: pre-line;
-}
-
-.chats-container .user-msg {
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.chats-container .user-msg .msg-text {
-    padding: 12px 16px;
-    max-width: 75%;
-    border-radius: 13px 13px 3px 13px;
-    background: var(--secondary-color);
-}
