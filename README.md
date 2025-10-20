@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="imgs/archieTemo.svg" alt="ArchieAI Logo" width="150"/>
+  <img src="imgs/Mini Knight Laptop.png" alt="ArchieAI Logo" width="150"/>
 </p>
 
 <h1 align="center">ArchieAI</h1>
