@@ -8,3 +8,6 @@ Archie AI is an AI-powered assistant designed to help users and students with a 
 - Customizable: Tailor responses and functionalities to suit individual needs.
 - Integration: Easily integrates with various platforms and applications.
 
+## Usage
+To use ArchieAI, simply interact with it through your preferred messaging platform or web interface. Ask questions, request assistance, or provide instructions, and ArchieAI will respond accordingly.
+
