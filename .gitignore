@@ -16,3 +16,7 @@ env/
 *.vscode/
 .idea/
 *.swp
+
+# Added by cargo
+
+/target
