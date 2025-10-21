@@ -1,1 +1,18 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Environment files
 .env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Virtual environment directories
+venv/
+env/
+
+# IDE and editor files
+*.vscode/
+.idea/
+*.swp
