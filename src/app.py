@@ -1,4 +1,4 @@
 from lib import GemInterface
 gemini = GemInterface.AiInterface()
 
-print(gemini.arcadia_gen("What majors does Arcadia University offer?"))
+print(gemini.Archie("What majors does Arcadia University offer?"))

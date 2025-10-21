@@ -46,7 +46,7 @@ class AiInterface:
         except requests.RequestException as e:
             return f"An error occurred while scraping the website: {e}"
 
-    def arcadia_gen(self, query: str) -> str:
+    def Archie(self, query: str) -> str:
         """
         Generate a response for a query using Arcadia University website content.
         """
