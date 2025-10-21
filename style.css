@@ -1,0 +1,277 @@
+/* Importing Google Fonts - Poppins family with different weights */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+/* Global reset for margin, padding, and consistent font usage */
+* {
+    margin: 0%;
+    padding: 0%;
+    box-sizing: border-box;
+    font-family: "Poppins", serif;
+}
+
+/* Root-level CSS variables for colors and theme customization */
+:root {
+    --text-color: #edf3ff;
+    --subheading-color: #97a7ca;
+    --placeholder-color: #c3cdde;
+    --primary-color: #101623;
+    --secondary-color: #283045;
+    --secondary-hover-color: #333e58;
+    --scrollbar-color: #626a7f;
+}
+
+/* Default body styles - sets text color and background */
+body {
+    color: var(--text-color);
+    background: var(--primary-color);
+}
+
+/* Main container padding for layout spacing */
+.container {
+    padding: 32px 0 60px;
+}
+
+/* Consistent layout widths for main elements */
+.container :where(.app-header, .suggestions, .message, .prompt-wrapper, .disclaimer-text) {
+    margin: 0 auto;
+    width: 100%;
+    padding: 0 20px;
+    max-width: 980px;
+}
+
+/* Adds space at the top for the header */
+.container .app-header {
+    margin-top: 4vh;
+}
+
+/* Main heading styling - gradient text effect */
+.app-header .heading {
+    font-size: 3rem;
+    width: fit-content;
+    background: linear-gradient(to right, #A20623, #590413);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Subheading styling - smaller and softer color */
+.app-header .subheading {
+    font-size: 2.6rem;
+    margin-top: -5px;
+    color: var(--subheading-color)
+}
+
+/* Individual suggestion card style */
+.suggestions .suggestion-item {
+    padding: 18px;
+    width: 228px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    display: flex;
+    cursor: pointer;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    background: var(--secondary-color);
+    transition: 0.3s ease;
+}
+
+/* Hover effect for suggestion cards */
+.suggestions .suggestion-item:hover {
+    background: var(--secondary-hover-color);
+}
+
+/* Horizontal scroll for suggestion list */
+.container .suggestions {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    list-style: none;
+    margin-top: 9.5vh;
+    scrollbar-width: none;
+}
+
+/* Suggestion text styling */
+.suggestions .suggestion-item .text {
+    font-size: 1.1rem;
+}
+
+/* Icon inside suggestion cards */
+.suggestions .suggestion-item span {
+    height: 45px;
+    width: 45px;
+    margin-top: 35px;
+    display: flex;
+    align-items: center;
+    align-self: flex-end;
+    justify-content: center;
+    border-radius: 50%;
+    color: #A20623;
+    background: var(--primary-color);
+}
+
+/* Layout for chat message container */
+.container .chats-container {
+    display: flex;
+    gap: 20px;
+    flex-direction: column;
+}
+
+/* Base styling for message bubbles */
+.chats-container .message {
+    display: flex;
+    gap: 11px;
+    align-items: center;
+}
+
+/* Bot avatar image styling */
+.chats-container .BOT-message .avi {
+    width: 43px;
+    height: 43px;
+    box-sizing: content-box;
+    border-radius: 50%;
+    padding: 6px;
+    background: var(--secondary-color);
+    border: 1px solid var(--secondary-hover-color);
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-right: -7px;
+    object-fit: contain;
+    display: inline-block;
+}
+
+/* Shared message text box styles */
+.chats-container .message .message-text {
+    padding: 3px 16px;
+    word-wrap: break-word;
+    white-space: pre-line;
+}
+
+/* Adds vertical space between bot messages */
+.chats-container .BOT-message {
+    margin: 9px auto;
+}
+
+/* Aligns user messages to the right side */
+.chats-container .user-message {
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* Styling for user message bubble */
+.chats-container .user-message .message-text {
+    padding: 12px 16px;
+    max-width: 75%;
+    border-radius: 13px 13px 3px 13px;
+    background: var(--secondary-color);
+}
+
+/* Fixed input container at bottom of screen */
+.prompt-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 16px 0;
+    background: var(--primary-color);
+}
+
+/* Flexbox layout for prompt input and buttons */
+.prompt-container :where(.prompt-wrapper, .prompt-form, .prompt-actions) {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    height: 56px;
+}
+
+/* Wrapper styling for prompt input form */
+.prompt-wrapper .prompt-form {
+    width: 100%;
+    height: 100%;
+    border-radius: 130px;
+    background: var(--secondary-color);
+}
+
+/* Input field styling inside prompt form */
+.prompt-form .prompt-input {
+    height: 100%;
+    width: 100%;
+    background: none;
+    outline: none;
+    border: none;
+    font-size: 1rem;
+    padding-left: 24px;
+    color: var(--text-color);
+}
+
+/* Placeholder text color */
+.prompt-form .prompt-input::placeholder {
+    color: var(--placeholder-color);
+}
+
+/* General button styling in prompt area */
+.prompt-wrapper button {
+    width: 56px;
+    height: 100%;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    color: var(--text-color);
+    background: var(--secondary-color);
+    transition: 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* Button hover color change */
+.prompt-wrapper button:hover {
+    background: var(--secondary-hover-color);
+}
+
+/* Small disclaimer text below input */
+.prompt-container .disclaimer-text {
+    text-align: center;
+    font-size: 0.9rem;
+    padding: 16px 20px 0;
+    color: var(--placeholder-color);
+}
+
+/* Send button hidden until input is valid */
+.prompt-form #send-prompt-btn {
+    color: white;
+    background: #A20623;
+    display: none;
+    transition: 0.3s ease;
+}
+
+/* Show send button when input has text */
+.prompt-form .prompt-input:valid ~ .prompt-actions #send-prompt-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Hover effect for send button */
+.prompt-form #send-prompt-btn:hover {
+    background: #c4092b;
+}
+
+/* Layout for buttons inside prompt actions */
+.prompt-form .prompt-actions {
+    gap: 5px;
+    margin-right: 7px;
+}
+
+/* Size and alignment for file and send buttons */
+.prompt-form .prompt-actions button {
+    height: 45px;
+    width: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
