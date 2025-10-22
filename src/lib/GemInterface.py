@@ -157,12 +157,13 @@ class AiInterface:
         return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
 
     async def Archie(self, query: str) -> str:
+
         """
         Async entry point that:
-         - Executes the original synchronous scrape_website concurrently in threads
-           so the async event loop is not blocked.
-         - Uses the async generate_text_async wrapper to call the Gemini client
-           without blocking the event loop.
+        - Executes the original synchronous scrape_website concurrently in threads
+        so the async event loop is not blocked.
+        - Uses the async generate_text_async wrapper to call the Gemini client
+        without blocking the event loop.
         """
         urls = {
             "website": "https://www.arcadia.edu/",
@@ -183,6 +184,7 @@ class AiInterface:
         results = {}
         for name, task in scrape_tasks.items():
             try:
+                print(f"Waiting for scrape task: {name}")
                 results[name] = await task
             except Exception as e:
                 # Shouldn't happen often, but catch to ensure Archie continues gracefully
@@ -210,6 +212,7 @@ IT Resources Content:
 {results.get('ITresources', '')}
 """
         # Call the genai client without blocking the event loop
+        print("Generating text with prompt:", prompt)
         return await self.generate_text_async(prompt)
     
     

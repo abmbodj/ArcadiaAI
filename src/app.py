@@ -41,8 +41,8 @@ def ask():
 
 @app.route("/", methods=["GET"])
 def home():
-    response = Archie("When is fall break?")
-    return response
+    response = gemini.scrape_website("https://www.arcadia.edu/")
+    return fk.jsonify(response)
 
 
 @app.route("/chats", methods=["GET"])
@@ -51,9 +51,11 @@ def chats():
     return chatstemplate
 
 
+
+
+    
 if __name__ == "__main__":
     print("Working Directory:", os.getcwd())
-    gemini.start_datascraper()
     # Use threaded=True so the dev server can serve other requests while background tasks run
     # For production, run with a WSGI/ASGI server (gunicorn/uvicorn) and a proper worker strategy.
 
