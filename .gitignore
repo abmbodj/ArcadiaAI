@@ -20,3 +20,5 @@ env/
 # Added by cargo
 
 /target
+data/scrape_results.json
+/data
