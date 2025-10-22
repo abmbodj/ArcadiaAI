@@ -8,6 +8,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from typing import Any, Optional
+import json
 
 
 class AiInterface:
@@ -155,8 +156,17 @@ class AiInterface:
         """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
-
+    
     async def Archie(self, query: str) -> str:
+        with open("data/scrape_results.json", "r", encoding="utf-8") as f:
+            results = json.load(f)
+        prompt = f"""System: You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university. You were made by Eva Akselrad and Ab.
+Using the following website content, answer the query: {query}
+Data Content:
+{results}"""
+        
+
+        return await self.generate_text_async(prompt)
 
         """
         Async entry point that:
@@ -164,7 +174,7 @@ class AiInterface:
         so the async event loop is not blocked.
         - Uses the async generate_text_async wrapper to call the Gemini client
         without blocking the event loop.
-        """
+        
         urls = {
             "website": "https://www.arcadia.edu/",
             "events": "https://www.arcadia.edu/events/?mode=month",
@@ -190,7 +200,7 @@ class AiInterface:
                 # Shouldn't happen often, but catch to ensure Archie continues gracefully
                 results[name] = f"Error during scraping {name}: {e}"
 
-        prompt = f"""System: You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university. You were made by Eva Akselrad and Ab.
+        prompt = fSystem: You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university. You were made by Eva Akselrad and Ab.
 Using the following website content, answer the query: {query}
 
 Website Content:
@@ -210,10 +220,10 @@ Dining Hours Content:
 
 IT Resources Content:
 {results.get('ITresources', '')}
-"""
+
         # Call the genai client without blocking the event loop
         print("Generating text with prompt:", prompt)
-        return await self.generate_text_async(prompt)
+        return await self.generate_text_async(prompt)"""
     
     
 

@@ -36,13 +36,14 @@ def ask():
     response = Archie(query)
     return fk.jsonify({"response": response})
 
-
+import json
 
 
 @app.route("/", methods=["GET"])
 def home():
-    response = gemini.scrape_website("https://www.arcadia.edu/")
-    return fk.jsonify(response)
+    hometemplate = fk.render_template("index.html")
+    return hometemplate
+
 
 
 @app.route("/chats", methods=["GET"])
@@ -50,13 +51,37 @@ def chats():
     chatstemplate = fk.render_template("chats.html")
     return chatstemplate
 
+def background_checker():
+    urls = {
+        "website": "https://www.arcadia.edu/",
+        "events": "https://www.arcadia.edu/events/?mode=month",
+        "about": "https://www.arcadia.edu/about-arcadia/",
+        "weather": "https://weather.com/weather/today/l/b0f4fc1167769407f55347d55f492a46e194ccaed63281d2fa3db2e515020994",
+        "diningHours": "https://www.arcadia.edu/life-arcadia/living-commuting/dining/",
+        "ITresources": "https://www.arcadia.edu/life-arcadia/campus-life-resources/information-technology/",
+        "Academic Calendar": "https://www.arcadia.edu/academics/resources/academic-calendars/2025-26/",
+        }
+    
 
+    dictionary = {}
+    for name, url in urls.items():
+        result = gemini.scrape_website(url)
+        dictionary[name] = result
 
+    # ensure the data directory exists, then write the collected dictionary as JSON
+    os.makedirs(os.path.dirname("data/scrape_results.json"), exist_ok=True)
+    with open("data/scrape_results.json", "w", encoding="utf-8") as f:
+        json.dump(dictionary, f, ensure_ascii=False, indent=4)
 
     
 if __name__ == "__main__":
-    print("Working Directory:", os.getcwd())
     # Use threaded=True so the dev server can serve other requests while background tasks run
     # For production, run with a WSGI/ASGI server (gunicorn/uvicorn) and a proper worker strategy.
+
+    #run a seperate python file in a seperate terminal using os.system that scrapes the arcadia website every hour in the background
+    threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
+
+
+
 
     app.run(debug=True, threaded=True)
