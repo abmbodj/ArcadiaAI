@@ -11,6 +11,7 @@ proj_root = os.path.dirname(__file__)          # project root if app.py is there
 src_dir = os.path.join(proj_root, "src")
 sys.path.insert(0, src_dir)
 from lib import GemInterface
+from lib import qrCodeGen
 import time
 import traceback
 
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
     #print(Archie("What is Arcadia University short response please? What is the weather like there? Where is the dining hall located? What IT resources are available to students? When are finals for Fall 2025"))
 
+    qrCodeGen.make_qr("example.com", show=True, save_path="websiteqr.png")
 
 
-
-    app.run(debug=True, threaded=True)
+    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
