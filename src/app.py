@@ -112,7 +112,7 @@ if __name__ == "__main__":
     threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
     #print(Archie("What is Arcadia University short response please? What is the weather like there? Where is the dining hall located? What IT resources are available to students? When are finals for Fall 2025"))
 
-    qrCodeGen.make_qr("example.com", show=True, save_path="websiteqr.png")
+    qrCodeGen.make_qr("https://bjt426ms-5000.use.devtunnels.ms/", show=True, save_path="websiteqr.png")
 
 
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
