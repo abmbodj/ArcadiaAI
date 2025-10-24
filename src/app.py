@@ -33,8 +33,15 @@ def Archie(query: str) -> str:
 
 @app.route("/", methods=["GET"])
 def home():
-    hometemplate = fk.render_template("home.html")
+    hometemplate = fk.render_template("index.html")
     return hometemplate
+
+@app.route("/api/archie", methods=["POST"])
+def api_archie():
+    data = fk.request.get_json()
+    question = data.get("question", "")
+    answer = Archie(question)
+    return fk.jsonify({"answer": answer})
 
 @app.route("/gchats", methods=["GET", "POST"])
 def gchats():
