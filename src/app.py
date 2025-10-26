@@ -41,6 +41,12 @@ def api_archie():
     data = fk.request.get_json()
     question = data.get("question", "")
     answer = Archie(question)
+    with open("data/qna.json", "r", encoding="utf-8") as f:
+        qna_data = json.load(f)
+    qna_data[question] = answer
+    with open("data/qna.json", "w", encoding="utf-8") as f:
+        json.dump(qna_data, f, ensure_ascii=False, indent=4)
+    print(f"Question: {question}\nAnswer: {answer}\n")
     return fk.jsonify({"answer": answer})
 
 @app.route("/gchats", methods=["GET", "POST"])
@@ -119,7 +125,7 @@ if __name__ == "__main__":
     threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
     #print(Archie("What is Arcadia University short response please? What is the weather like there? Where is the dining hall located? What IT resources are available to students? When are finals for Fall 2025"))
 
-    qrCodeGen.make_qr("https://bjt426ms-5000.use.devtunnels.ms/", show=True, save_path="websiteqr.png")
+    qrCodeGen.make_qr("https://v407t2ft.use.devtunnels.ms:5000", show=True, save_path="websiteqr.png")
 
 
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)

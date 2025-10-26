@@ -160,10 +160,15 @@ class AiInterface:
     async def Archie(self, query: str) -> str:
         with open("data/scrape_results.json", "r", encoding="utf-8") as f:
             results = json.load(f)
-        prompt = f"""System: You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university. You were made by Eva Akselrad and Ab.
-Using the following website content, answer the query: {query}
-Data Content:
-{results}"""
+        prompt = f"""SERVER: You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
+SERVER:If you are unable to find the answer in the provided content respond with your best guess based on your knowledge up to 2025 keep in mind the chat and dining hall are different locations.
+
+        Using the following website content, answer the query:USER: {query} 
+SERVER:Data Content:
+{results}
+
+
+"""
         
 
         return await self.generate_text_async(prompt)
