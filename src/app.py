@@ -5,14 +5,16 @@ import threading
 import concurrent.futures
 import asyncio
 import flask as fk
-
+import json
 # Ensure your project src is on the path (same as your original)
 proj_root = os.path.dirname(__file__)          # project root if app.py is there
 src_dir = os.path.join(proj_root, "src")
 sys.path.insert(0, src_dir)
 from lib import GemInterface
+from lib import qrCodeGen
 import time
 import traceback
+from werkzeug.security import generate_password_hash
 
 # Create the AiInterface instance (expected to have an async Archie method)
 gemini = GemInterface.AiInterface()
@@ -26,17 +28,7 @@ def Archie(query: str) -> str:
     return asyncio.run(gemini.Archie(query))
 
 
-@app.route("/ask", methods=["POST"])
-def ask():
-    data = fk.request.json
-    query = data.get("query", "").strip()
-    if not query:
-        return fk.jsonify({"error": "Query cannot be empty."}), 400
 
-    response = Archie(query)
-    return fk.jsonify({"response": response})
-
-import json
 
 
 @app.route("/", methods=["GET"])
@@ -44,11 +36,62 @@ def home():
     hometemplate = fk.render_template("index.html")
     return hometemplate
 
+@app.route("/api/archie", methods=["POST"])
+def api_archie():
+    data = fk.request.get_json()
+    question = data.get("question", "")
+    answer = Archie(question)
+    with open("data/qna.json", "r", encoding="utf-8") as f:
+        qna_data = json.load(f)
+    qna_data[question] = answer
+    with open("data/qna.json", "w", encoding="utf-8") as f:
+        json.dump(qna_data, f, ensure_ascii=False, indent=4)
+    print(f"Question: {question}\nAnswer: {answer}\n")
+    return fk.jsonify({"answer": answer})
+
+@app.route("/gchats", methods=["GET", "POST"])
+def gchats():
+    session_id = fk.request.cookies.get("session_id")
+    if not session_id:
+        session_id = uuid.uuid4().hex
 
 
-@app.route("/chats", methods=["GET"])
+    # render template and attach session cookie
+    resp = fk.make_response(fk.redirect(fk.url_for("chats")))
+    print(f"New guest session started: {session_id}")
+    resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
+    return resp
+@app.route("/chats", methods=["GET", "POST"])
 def chats():
-    chatstemplate = fk.render_template("chats.html")
+    if fk.request.method == "POST":
+        email = fk.request.form.get("email", "").strip()
+        password = fk.request.form.get("password", "")
+        # replace the following simple check with your real authentication
+        if email and password:
+            
+            password = generate_password_hash(password)
+            with open("data/users.json", "r", encoding="utf-8") as f:
+                users = json.load(f)
+            if email not in users:
+                users[email] = {"password": password}
+                with open("data/users.json", "w", encoding="utf-8") as f:
+                    json.dump(users, f, ensure_ascii=False, indent=4)
+            else:
+                stored_hash = users[email]["password"]
+                if stored_hash != users[email]["password"]:
+                    return fk.render_template("home.html", error="Invalid email or password")
+            session_id = fk.request.cookies.get("session_id")
+            if not session_id:
+                session_id = uuid.uuid4().hex
+            # render template and attach session cookie 
+            resp = fk.make_response(fk.redirect(fk.url_for("chats")))
+            print(f"User {email} logged in with session: {session_id}")
+            resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
+            return resp
+            
+        else:
+            return fk.render_template("home.html", error="Please provide email and password")
+    chatstemplate = fk.render_template("index.html")
     return chatstemplate
 
 def background_checker():
@@ -82,7 +125,7 @@ if __name__ == "__main__":
     threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
     #print(Archie("What is Arcadia University short response please? What is the weather like there? Where is the dining hall located? What IT resources are available to students? When are finals for Fall 2025"))
 
+    qrCodeGen.make_qr(" https://cgs3mzng.use.devtunnels.ms:5000", show=True, save_path="websiteqr.png")
 
 
-
-    app.run(debug=True, threaded=True)
+    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)

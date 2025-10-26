@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- Main landing page for ArchieAI - displays title, suggestions, and input prompt -->
+<!-- Combined landing + chat page for ArchieAI - dynamic single-page UI -->
 <html>
 
 <head>
-    <link rel="icon" type="image/png" href="static/imgs/Mini Knight Laptop.svg"/>
+  <link rel="icon" type="image/png" href="static/imgs/Mini Knight Laptop.svg" />
 
   <!-- Meta information for proper text encoding and mobile responsiveness -->
   <meta charset="UTF-8">
@@ -15,72 +15,373 @@
 
   <!-- Link to custom stylesheet for page styling -->
   <link rel="stylesheet" href="static/styles/style.css">
+  <style>
+    /* Minimal helper styles to ensure the dynamic views work regardless of existing CSS */
+    /* These can be overridden by your static/styles/style.css if desired */
+    .hidden {
+      display: none;
+    }
+
+    /* Simple layout tweak for a header in chat view */
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .chat-header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .back-home-btn {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-family: "Material Symbols Outlined", sans-serif;
+      font-size: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: inherit;
+    }
+
+    .chats-container {
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* message bubble tweaks if not styled */
+    .message {
+      padding: 10px 12px;
+      border-radius: 10px;
+      max-width: 75%;
+    }
+
+    .user-message {
+      align-self: flex-end;
+    }
+
+    .BOT-message {
+      align-self: flex-start;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .avi {
+      width: 36px;
+      height: 36px;
+    }
+
+    /* Make suggestion items more clickable */
+    .suggestion-item {
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
   <!-- Main container that wraps all content on the page -->
   <div class="container">
 
-    <!-- Header section containing app name and tagline -->
-    <header class="app-header">
-      <h1 class="heading">ArchieAI</h1>
-      <h2 class="subheading">The knight that helps you!</h2>
-    </header>
+    <!-- LANDING (home) VIEW -->
+    <main id="home-view">
+      <!-- Header section containing app name and tagline -->
+      <header class="app-header">
+        <h1 class="heading">ArchieAI</h1>
+        <h2 class="subheading">The knight that helps you!</h2>
+      </header>
 
-    <!-- List of suggested prompts for quick user questions -->
-    <ul class="suggestions">
+      <!-- List of suggested prompts for quick user questions -->
+      <ul class="suggestions" id="suggestions-list">
 
-      <!-- Individual suggestion item with text and matching icon -->
-      <li class="suggestion-item">
-        <p class="suggestion-text">Where is the IT HelpDesk at Arcadia?</p>
-        <span class="material-symbols-outlined">computer</span>
-      </li>
+        <!-- Individual suggestion items -->
+        <li class="suggestion-item" data-text="Where is the IT HelpDesk at Arcadia?">
+          <p class="suggestion-text">Where is the IT HelpDesk at Arcadia?</p>
+          <span class="material-symbols-outlined">computer</span>
+        </li>
 
-      <li class="suggestion-item">
-        <p class="suggestion-text">What is the weather like at Arcadia?</p>
-        <span class="material-symbols-outlined">weather_hail</span>
-      </li>
+        <li class="suggestion-item" data-text="What is the weather like at Arcadia?">
+          <p class="suggestion-text">What is the weather like at Arcadia?</p>
+          <span class="material-symbols-outlined">weather_hail</span>
+        </li>
 
-      <li class="suggestion-item">
-        <p class="suggestion-text">What are the times for the Dining Hall at Arcadia?</p>
-        <span class="material-symbols-outlined">food_bank</span>
-      </li>
+        <li class="suggestion-item" data-text="What are the times for the Dining Hall at Arcadia?">
+          <p class="suggestion-text">What are the times for the Dining Hall at Arcadia?</p>
+          <span class="material-symbols-outlined">food_bank</span>
+        </li>
 
-      <li class="suggestion-item">
-        <p class="suggestion-text">What are the housing options at Arcadia?</p>
-        <span class="material-symbols-outlined">bungalow</span>
-      </li>
-    </ul>
+        <li class="suggestion-item" data-text="What are the housing options at Arcadia?">
+          <p class="suggestion-text">What are the housing options at Arcadia?</p>
+          <span class="material-symbols-outlined">bungalow</span>
+        </li>
+      </ul>
 
-    <!-- Section for user prompt input and control buttons -->
-    <div class="prompt-container">
-      <div class="prompt-wrapper">
+      <!-- Section for user prompt input and control buttons -->
+      <div class="prompt-container">
+        <div class="prompt-wrapper">
 
-        <!-- Form for submitting user queries to Archie -->
-        <form action="#" class="prompt-form">
-          <!-- Input field where user types a question -->
-          <input type="text" placeholder="Ask Archie!" class="prompt-input" required>
+          <!-- Form for submitting user queries to Archie -->
+          <form action="#" class="prompt-form" id="home-prompt-form">
+            <!-- Input field where user types a question -->
+            <input type="text" placeholder="Ask Archie!" class="prompt-input" id="home-prompt-input" required>
 
-          <!-- Container for the file and send buttons -->
-          <div class="prompt-actions">
-            <!-- Button for attaching files (currently decorative) -->
-            <button id="add-file-btn" type="button" class="material-symbols-outlined">attach_file</button>
-            <!-- Button for sending the user's message -->
-            <button id="send-prompt-btn" class="material-symbols-outlined">arrow_upward</button>
-          </div>
-        </form>
+            <!-- Container for the file and send buttons -->
+            <div class="prompt-actions">
+              <!-- Button for attaching files (currently decorative) -->
+              <button id="home-add-file-btn" type="button" class="material-symbols-outlined">attach_file</button>
+              <!-- Button for sending the user's message -->
+              <button id="home-send-prompt-btn" class="material-symbols-outlined" type="submit">arrow_upward</button>
+            </div>
+          </form>
 
-        <!-- Button for toggling between light and dark themes -->
-        <button id="theme-toggle-btn" class="material-symbols-outlined">light_mode</button>
-        <!-- Button for deleting chat history -->
-        <button id="delete-chats-btn" class="material-symbols-outlined">delete</button>
+          <!-- Button for toggling between light and dark themes -->
+          <button id="home-theme-toggle-btn" class="material-symbols-outlined">light_mode</button>
+          <!-- Button for deleting chat history (affects combined chats) -->
+          <button id="home-delete-chats-btn" class="material-symbols-outlined">delete</button>
+        </div>
+
+        <!-- Disclaimer reminding users that AI responses may contain errors -->
+        <p class="disclaimer-text">Archie can make mistakes. Always make sure the info you are given is correct</p>
+      </div>
+    </main>
+
+    <!-- CHAT VIEW (initially hidden) -->
+    <section id="chat-view" class="hidden" aria-hidden="true">
+      <header class="chat-header">
+        <button id="back-to-home-btn" class="back-home-btn" title="Back to home">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <h1 class="heading">ArchieAI</h1>
+        <p style="margin-left:auto;opacity:0.85;font-size:0.9rem">Chat</p>
+      </header>
+
+      <!-- Section that displays chat messages -->
+      <div class="chats-container" id="chats-container">
+        <!-- Chat messages will be appended here -->
+        <!-- Example of a bot message bubble (placeholder) -->
+        <!-- <div class="message BOT-message">
+          <img src="static/imgs/Mini Knight Laptop.svg" class="avi">
+          <p class="message-text">Welcome! Ask me anything about Arcadia.</p>
+        </div> -->
       </div>
 
-      <!-- Disclaimer reminding users that AI responses may contain errors -->
-      <p class="disclaimer-text">Archie can make mistakes. Always make sure the info you are given is correct</p>
-    </div>
+      <!-- Section containing the user input field and controls -->
+      <div class="prompt-container">
+        <div class="prompt-wrapper">
+          <!-- Form for user to input and send prompts -->
+          <form action="#" class="prompt-form" id="chat-prompt-form">
+            <!-- Text input for user's message -->
+            <input type="text" placeholder="Ask Archie!" class="prompt-input" id="chat-prompt-input" required>
+
+            <!-- Container for input action buttons -->
+            <div class="prompt-actions">
+              <!-- Button to attach a file (non-functional placeholder) -->
+              <button id="chat-add-file-btn" type="button" class="material-symbols-outlined">attach_file</button>
+              <!-- Button to send the user's prompt -->
+              <button id="chat-send-prompt-btn" class="material-symbols-outlined" type="submit">arrow_upward</button>
+            </div>
+          </form>
+
+          <!-- Button to toggle between light and dark themes -->
+          <button id="chat-theme-toggle-btn" class="material-symbols-outlined">light_mode</button>
+          <!-- Button to delete all chat messages -->
+          <button id="chat-delete-chats-btn" class="material-symbols-outlined">delete</button>
+        </div>
+
+        <!-- Disclaimer to remind users that AI responses may not always be accurate -->
+        <p class="disclaimer-text">Archie can make mistakes. Always make sure the info you are given is correct</p>
+      </div>
+    </section>
 
   </div>
+
+  <script>
+    // DOM elements
+    const homeView = document.getElementById('home-view');
+    const chatView = document.getElementById('chat-view');
+    const backToHomeBtn = document.getElementById('back-to-home-btn');
+
+    const suggestionsList = document.getElementById('suggestions-list');
+    const homePromptForm = document.getElementById('home-prompt-form');
+    const homePromptInput = document.getElementById('home-prompt-input');
+    const homeThemeToggle = document.getElementById('home-theme-toggle-btn');
+    const homeDeleteChats = document.getElementById('home-delete-chats-btn');
+
+    const chatPromptForm = document.getElementById('chat-prompt-form');
+    const chatPromptInput = document.getElementById('chat-prompt-input');
+    const chatsContainer = document.getElementById('chats-container');
+    const chatThemeToggle = document.getElementById('chat-theme-toggle-btn');
+    const chatDeleteChats = document.getElementById('chat-delete-chats-btn');
+
+    // Utility to switch views
+    function showChat(prefillText = '', autoSend = false) {
+      homeView.classList.add('hidden');
+      chatView.classList.remove('hidden');
+      chatView.setAttribute('aria-hidden', 'false');
+
+      // Move focus to input
+      chatPromptInput.focus();
+
+      if (prefillText) {
+        chatPromptInput.value = prefillText;
+        if (autoSend) {
+          // Slight delay to allow UI to update
+          setTimeout(() => {
+            submitChatMessage(prefillText);
+            chatPromptInput.value = '';
+          }, 50);
+        }
+      }
+    }
+
+    function showHome() {
+      chatView.classList.add('hidden');
+      homeView.classList.remove('hidden');
+      chatView.setAttribute('aria-hidden', 'true');
+      homePromptInput.focus();
+    }
+
+    // Toggle theme (adds/removes 'dark' class on body)
+    function toggleTheme(button) {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      // Update icon text - keep simple swap between 'light_mode' and 'dark_mode'
+      if (isDark) {
+        button.textContent = 'dark_mode';
+      } else {
+        button.textContent = 'light_mode';
+      }
+    }
+
+    // Add message nodes to the chat
+    function appendUserMessage(text) {
+      const msg = document.createElement('div');
+      msg.className = 'message user-message';
+      const p = document.createElement('p');
+      p.className = 'message-text';
+      p.textContent = text;
+      msg.appendChild(p);
+      chatsContainer.appendChild(msg);
+      chatsContainer.scrollTop = chatsContainer.scrollHeight;
+    }
+
+    function appendBotMessage(text) {
+      const msg = document.createElement('div');
+      msg.className = 'message BOT-message';
+      const img = document.createElement('img');
+      img.src = 'static/imgs/Mini Knight Laptop.svg';
+      img.className = 'avi';
+      const p = document.createElement('p');
+      p.className = 'message-text';
+      p.textContent = text;
+      msg.appendChild(img);
+      msg.appendChild(p);
+      chatsContainer.appendChild(msg);
+      chatsContainer.scrollTop = chatsContainer.scrollHeight;
+    }
+
+    // Placeholder for sending a message — currently simply echoes and a fake bot reply.
+    function submitChatMessage(text) {
+      if (!text || !text.trim()) return;
+      appendUserMessage(text.trim());
+
+      // Placeholder bot reply — you can replace this with actual API call integration
+      setTimeout(() => {
+        appendBotMessage('Thinking...');
+        (async () => {
+          try {
+            const res = await fetch('/api/archie', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ question: text })
+            });
+
+            if (!res.ok) {
+              appendBotMessage(`Error: ${res.status} ${res.statusText}`);
+              return;
+            }
+
+            const data = await res.json();
+            const reply = data.answer ?? data.reply ?? data.text ?? JSON.stringify(data);
+            appendBotMessage(reply);
+          } catch (err) {
+            appendBotMessage('Network error: ' + err.message);
+          }
+        })();
+        
+        
+      }, 700);
+    }
+
+    // suggestion click -> open chat with suggestion prefilled
+    suggestionsList.addEventListener('click', (ev) => {
+      let li = ev.target;
+      // walk up to li with class suggestion-item
+      while (li && !li.classList.contains('suggestion-item')) {
+        li = li.parentElement;
+      }
+      if (!li) return;
+      const text = li.getAttribute('data-text') || li.textContent.trim();
+      // Open chat and prefill; do not auto-send by default
+      showChat(text, false);
+    });
+
+    // Home prompt submit: navigate to chat and send message
+    homePromptForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const text = homePromptInput.value.trim();
+      if (!text) return;
+      showChat('', true); // open chat and auto-send
+      // send message after opening
+      setTimeout(() => {
+        submitChatMessage(text);
+      }, 60);
+      homePromptInput.value = '';
+    });
+
+    // Chat prompt submit: send message
+    chatPromptForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const text = chatPromptInput.value.trim();
+      if (!text) return;
+      submitChatMessage(text);
+      chatPromptInput.value = '';
+    });
+
+    // Back to home
+    backToHomeBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      showHome();
+    });
+
+    // Theme toggles on both views
+    homeThemeToggle.addEventListener('click', () => toggleTheme(homeThemeToggle));
+    chatThemeToggle.addEventListener('click', () => toggleTheme(chatThemeToggle));
+
+    // Delete chats - clears chats container
+    function clearChats() {
+      chatsContainer.innerHTML = '';
+    }
+    homeDeleteChats.addEventListener('click', clearChats);
+    chatDeleteChats.addEventListener('click', clearChats);
+
+    // Ensure keyboard friendly: pressing Escape in chat returns home
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && !chatView.classList.contains('hidden')) {
+        showHome();
+      }
+    });
+
+    // Initialize small welcome message in chat (optional)
+    appendBotMessage('Welcome to Archie! Click a suggestion or type a question to start a chat.');
+  </script>
 </body>
 
 </html>
