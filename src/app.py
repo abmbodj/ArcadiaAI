@@ -108,7 +108,7 @@ if __name__ == "__main__":
     # For production, run with a WSGI/ASGI server (gunicorn/uvicorn) and a proper worker strategy.
 
     #run a seperate python file in a seperate terminal using os.system that scrapes the arcadia website every hour in the background
-    threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
+    #threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
     #print(Archie("What is Arcadia University short response please? What is the weather like there? Where is the dining hall located? What IT resources are available to students? When are finals for Fall 2025"))
 
     #qrCodeGen.make_qr(" https://cgs3mzng.use.devtunnels.ms:5000", show=True, save_path="websiteqr.png")

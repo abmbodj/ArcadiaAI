@@ -12,12 +12,18 @@ import json
 
 from ollama import chat
 from ollama import ChatResponse
-def getResponse(prompt: str, model) -> str:
+def getResponse(prompt: str, model, server) -> str:
         try:
             response: ChatResponse = chat(model=model, messages=[
                 {
                 'role': 'user',
                     'content': prompt,
+                    
+                },
+                {
+                'role': 'server',
+                    'content': server,
+                    
                 },
             ])
             return response['message']['content']
@@ -143,25 +149,25 @@ class AiInterface:
             return f"An unexpected error occurred while scraping the website: {e}"
 
 
-    async def generate_text_async(self, prompt: str) -> str:
+    async def generate_text_async(self, prompt: str, server: str) -> str:
         """
         Async wrapper around the synchronous genai client call.
         Runs the synchronous operation in a threadpool to avoid blocking the event loop.
         """
 
-        def _generate_text(self, prompt: str) -> str:
+        def _generate_text(self, prompt: str, server: str) -> str:
             """
             Synchronous compatibility method retained: generate text using the genai client.
             This method behaves like the original code if called synchronously.
             """
             try:
-                return getResponse(prompt, model=self.model)
+                return getResponse(prompt, model=self.model, server=server)
             except APIError as e:
                 return f"An API Error occurred during text generation: {e}"
         
 
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, _generate_text, self, prompt)
+        return await loop.run_in_executor(None, _generate_text, self, prompt, server)
 
     async def _run_in_executor(self, func: Any, *args, **kwargs):
         """
@@ -177,18 +183,17 @@ class AiInterface:
         SERVER: You are made by students for a final project. You must be factual and accurate based on the information provided it is ok to say "I don't know" if you are unsure.
 
 SERVER:respond based on your knowledge up to 2025.
+        
+SERVER:Use the following content to better answer the query:{results}
 
-        answer the query:
-        
-        
-        USER: {query} 
+
 
 
 
 """
         
 
-        return await self.generate_text_async(prompt)
+        return await self.generate_text_async(query,server = prompt)
 
         """
         Async entry point that:
