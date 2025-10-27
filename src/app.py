@@ -68,18 +68,6 @@ def chats():
         password = fk.request.form.get("password", "")
         # replace the following simple check with your real authentication
         if email and password:
-            
-            password = generate_password_hash(password)
-            with open("data/users.json", "r", encoding="utf-8") as f:
-                users = json.load(f)
-            if email not in users:
-                users[email] = {"password": password}
-                with open("data/users.json", "w", encoding="utf-8") as f:
-                    json.dump(users, f, ensure_ascii=False, indent=4)
-            else:
-                stored_hash = users[email]["password"]
-                if stored_hash != users[email]["password"]:
-                    return fk.render_template("home.html", error="Invalid email or password")
             session_id = fk.request.cookies.get("session_id")
             if not session_id:
                 session_id = uuid.uuid4().hex
@@ -87,12 +75,13 @@ def chats():
             resp = fk.make_response(fk.redirect(fk.url_for("chats")))
             print(f"User {email} logged in with session: {session_id}")
             resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
-            return resp
+            chatstemplate = fk.render_template("index.html")
+            return chatstemplate
+            
             
         else:
             return fk.render_template("home.html", error="Please provide email and password")
-    chatstemplate = fk.render_template("index.html")
-    return chatstemplate
+
 
 def background_checker():
     urls = {
