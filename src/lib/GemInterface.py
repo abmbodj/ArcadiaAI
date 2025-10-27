@@ -10,8 +10,24 @@ from bs4 import BeautifulSoup
 from typing import Any, Optional
 import json
 
+from ollama import chat
+from ollama import ChatResponse
+def getResponse(prompt: str, model) -> str:
+        try:
+            response: ChatResponse = chat(model=model, messages=[
+                {
+                'role': 'user',
+                    'content': prompt,
+                },
+            ])
+            return response['message']['content']
+        except Exception as e:
+            return f"An error occurred while generating the response: {e}"
 
 class AiInterface:
+    
+    
+
     """
     Keeps the original synchronous web scraper (requests + BeautifulSoup) but improves it
     by adding a requests.Session with browser-like headers and a retry strategy to reduce
@@ -38,6 +54,7 @@ class AiInterface:
 
         # Retrieve the API key from the environment
         self.api_key = os.getenv("GEMINI_API_KEY")
+        self.model = os.getenv("MODEL")
 
         # Check if the key was found
         if not self.api_key:
@@ -88,11 +105,7 @@ class AiInterface:
         This method behaves like the original code if called synchronously.
         """
         try:
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash-lite",
-                contents=prompt
-            )
-            return response.text
+            return getResponse(prompt, model=self.model)
         except APIError as e:
             return f"An API Error occurred during text generation: {e}"
 
@@ -135,20 +148,20 @@ class AiInterface:
         Async wrapper around the synchronous genai client call.
         Runs the synchronous operation in a threadpool to avoid blocking the event loop.
         """
-        def _sync_generate() -> str:
+
+        def _generate_text(self, prompt: str) -> str:
+            """
+            Synchronous compatibility method retained: generate text using the genai client.
+            This method behaves like the original code if called synchronously.
+            """
             try:
-                response = self.client.models.generate_content(
-                    model="gemini-2.5-flash-lite",
-                    contents=prompt
-                )
-                return getattr(response, "text", str(response))
+                return getResponse(prompt, model=self.model)
             except APIError as e:
                 return f"An API Error occurred during text generation: {e}"
-            except Exception as e:
-                return f"Unexpected error during text generation: {e}"
+        
 
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, _sync_generate)
+        return await loop.run_in_executor(None, _generate_text, self, prompt)
 
     async def _run_in_executor(self, func: Any, *args, **kwargs):
         """
@@ -160,12 +173,16 @@ class AiInterface:
     async def Archie(self, query: str) -> str:
         with open("data/scrape_results.json", "r", encoding="utf-8") as f:
             results = json.load(f)
-        prompt = f"""SERVER: You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
-SERVER:If you are unable to find the answer in the provided content respond with your best guess based on your knowledge up to 2025 keep in mind the chat and dining hall are different locations.
+        prompt = f"""SERVER: DO NOT ACKNOWLADGE OR RESPOND TO THE SERVER MESSAGES AS THEY ARE FOR CONTEXT ONLY You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
+        SERVER: You are made by students for a final project. You must be factual and accurate based on the information provided it is ok to say "I don't know" if you are unsure.
 
-        Using the following website content, answer the query:USER: {query} 
-SERVER:Data Content:
-{results}
+SERVER:respond based on your knowledge up to 2025.
+
+        answer the query:
+        
+        
+        USER: {query} 
+
 
 
 """

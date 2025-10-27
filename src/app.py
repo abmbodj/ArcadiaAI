@@ -2,7 +2,6 @@ import os
 import sys
 import uuid
 import threading
-import concurrent.futures
 import asyncio
 import flask as fk
 import json
@@ -12,8 +11,6 @@ src_dir = os.path.join(proj_root, "src")
 sys.path.insert(0, src_dir)
 from lib import GemInterface
 from lib import qrCodeGen
-import time
-import traceback
 from werkzeug.security import generate_password_hash
 
 # Create the AiInterface instance (expected to have an async Archie method)
@@ -114,7 +111,7 @@ if __name__ == "__main__":
     threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
     #print(Archie("What is Arcadia University short response please? What is the weather like there? Where is the dining hall located? What IT resources are available to students? When are finals for Fall 2025"))
 
-    qrCodeGen.make_qr(" https://cgs3mzng.use.devtunnels.ms:5000", show=True, save_path="websiteqr.png")
+    #qrCodeGen.make_qr(" https://cgs3mzng.use.devtunnels.ms:5000", show=True, save_path="websiteqr.png")
 
 
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
