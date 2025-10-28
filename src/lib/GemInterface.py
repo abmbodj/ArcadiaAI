@@ -35,7 +35,7 @@ class AiInterface:
         load_dotenv()
 
         # Retrieve the model name from environment (defaults to llama2 if not set)
-        self.model = os.getenv("OLLAMA_MODEL", "llama2")
+        self.model = os.getenv("MODEL", "llama2")
 
         # Debug flag
         self.debug = debug
@@ -189,6 +189,8 @@ class AiInterface:
                 if 'message' in chunk and 'content' in chunk['message']:
                     yield chunk['message']['content']
         except Exception as e:
+            with open("error.txt", "a", encoding="utf-8") as f:
+                f.write(f"Error during streaming: {e}\n")
             self._log(f"Error during streaming: {e}")
             yield "An error occurred during streaming"
 
