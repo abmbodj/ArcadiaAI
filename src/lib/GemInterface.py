@@ -35,10 +35,7 @@ class AiInterface:
         load_dotenv()
 
         # Retrieve the model name from environment (defaults to llama2 if not set)
-        self.model = os.getenv("MODEL", "llama2")
-        
-        # Initialize Ollama async client for streaming
-        self.async_client = AsyncClient()
+        self.model = os.getenv("OLLAMA_MODEL", "llama2")
 
         # Debug flag
         self.debug = debug
@@ -180,7 +177,9 @@ class AiInterface:
         })
         
         try:
-            stream = await self.async_client.chat(
+            # Create a new AsyncClient for each streaming request to avoid event loop conflicts
+            async_client = AsyncClient()
+            stream = await async_client.chat(
                 model=self.model,
                 messages=messages,
                 stream=True
@@ -190,8 +189,7 @@ class AiInterface:
                 if 'message' in chunk and 'content' in chunk['message']:
                     yield chunk['message']['content']
         except Exception as e:
-            with open("error.txt", "w", encoding="utf-8") as f:
-                f.write(str(e))
+            self._log(f"Error during streaming: {e}")
             yield "An error occurred during streaming"
 
     async def _run_in_executor(self, func: Any, *args, **kwargs):
