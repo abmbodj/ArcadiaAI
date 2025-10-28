@@ -285,39 +285,83 @@
       msg.appendChild(p);
       chatsContainer.appendChild(msg);
       chatsContainer.scrollTop = chatsContainer.scrollHeight;
+      return msg; // Return the message element for updating
     }
 
-    // Placeholder for sending a message — currently simply echoes and a fake bot reply.
+    function updateBotMessage(msg, text) {
+      const p = msg.querySelector('.message-text');
+      if (p) {
+        p.textContent = text;
+        chatsContainer.scrollTop = chatsContainer.scrollHeight;
+      }
+    }
+
+    // Placeholder for sending a message with streaming support
     function submitChatMessage(text) {
       if (!text || !text.trim()) return;
       appendUserMessage(text.trim());
 
-      // Placeholder bot reply — you can replace this with actual API call integration
-      setTimeout(() => {
-        appendBotMessage('Thinking...');
-        (async () => {
-          try {
-            const res = await fetch('/api/archie', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ question: text })
-            });
+      // Show thinking indicator
+      const thinkingMsg = appendBotMessage('💭 Thinking...');
+      
+      // Use streaming endpoint for real-time responses
+      (async () => {
+        try {
+          const res = await fetch('/api/archie/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: text })
+          });
 
-            if (!res.ok) {
-              appendBotMessage(`Error: ${res.status} ${res.statusText}`);
-              return;
-            }
-
-            const data = await res.json();
-            const reply = data.answer ?? data.reply ?? data.text ?? JSON.stringify(data);
-            appendBotMessage(reply);
-          } catch (err) {
-            appendBotMessage('Network error: ' + err.message);
+          if (!res.ok) {
+            updateBotMessage(thinkingMsg, `Error: ${res.status} ${res.statusText}`);
+            return;
           }
-        })();
-        
-        
-      }, 700);
+
+          // Remove thinking message and create a new one for the actual response
+          thinkingMsg.remove();
+          const responseMsg = appendBotMessage('');
+          let fullResponse = '';
+
+          // Read the stream using EventSource-like behavior
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // Keep the last incomplete line in the buffer
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = JSON.parse(line.slice(6));
+                if (data.token) {
+                  fullResponse += data.token;
+                  updateBotMessage(responseMsg, fullResponse);
+                } else if (data.error) {
+                  updateBotMessage(responseMsg, 'Error: ' + data.error);
+                } else if (data.done) {
+                  // Streaming complete
+                  console.log('Streaming complete');
+                }
+              }
+            }
+          }
+
+          // Ensure we have at least something displayed
+          if (!fullResponse) {
+            updateBotMessage(responseMsg, 'No response received');
+          }
+        } catch (err) {
+          // If there's an error, remove thinking message and show error
+          thinkingMsg.remove();
+          appendBotMessage('Network error: ' + err.message);
+        }
+      })();
     }
 
     // suggestion click -> open chat with suggestion prefilled

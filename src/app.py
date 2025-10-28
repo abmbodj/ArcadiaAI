@@ -46,6 +46,40 @@ def api_archie():
     print(f"Question: {question}\nAnswer: {answer}\n")
     return fk.jsonify({"answer": answer})
 
+@app.route("/api/archie/stream", methods=["POST"])
+async def api_archie_stream():
+    """
+    Streaming endpoint that returns AI responses token by token.
+    This provides a better user experience by showing the AI "thinking" in real-time.
+    """
+    data = fk.request.get_json()
+    question = data.get("question", "")
+    
+    async def generate():
+        """Generator function for Server-Sent Events (SSE)"""
+        full_response = ""
+        try:
+            async for token in gemini.Archie_streaming(question):
+                full_response += token
+                # Send each token as a Server-Sent Event
+                yield f"data: {json.dumps({'token': token})}\n\n"
+            
+            # Save the full response to qna.json
+            with open("data/qna.json", "r", encoding="utf-8") as f:
+                qna_data = json.load(f)
+            qna_data[question] = full_response
+            with open("data/qna.json", "w", encoding="utf-8") as f:
+                json.dump(qna_data, f, ensure_ascii=False, indent=4)
+            
+            print(f"Question: {question}\nAnswer: {full_response}\n")
+            
+            # Send completion signal
+            yield f"data: {json.dumps({'done': True})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    
+    return fk.Response(generate(), mimetype='text/event-stream')
+
 @app.route("/gchats", methods=["GET", "POST"])
 def gchats():
     session_id = fk.request.cookies.get("session_id")
