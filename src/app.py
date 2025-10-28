@@ -47,7 +47,7 @@ def api_archie():
     return fk.jsonify({"answer": answer})
 
 @app.route("/api/archie/stream", methods=["POST"])
-async def api_archie_stream():
+def api_archie_stream():
     """
     Streaming endpoint that returns AI responses token by token.
     This provides a better user experience by showing the AI "thinking" in real-time.
@@ -55,26 +55,37 @@ async def api_archie_stream():
     data = fk.request.get_json()
     question = data.get("question", "")
     
-    async def generate():
+    def generate():
         """Generator function for Server-Sent Events (SSE)"""
         full_response = ""
         try:
-            async for token in gemini.Archie_streaming(question):
-                full_response += token
-                # Send each token as a Server-Sent Event
-                yield f"data: {json.dumps({'token': token})}\n\n"
-            
-            # Save the full response to qna.json
-            with open("data/qna.json", "r", encoding="utf-8") as f:
-                qna_data = json.load(f)
-            qna_data[question] = full_response
-            with open("data/qna.json", "w", encoding="utf-8") as f:
-                json.dump(qna_data, f, ensure_ascii=False, indent=4)
-            
-            print(f"Question: {question}\nAnswer: {full_response}\n")
-            
-            # Send completion signal
-            yield f"data: {json.dumps({'done': True})}\n\n"
+            # Run the async generator in a new event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                async_gen = gemini.Archie_streaming(question)
+                while True:
+                    try:
+                        token = loop.run_until_complete(async_gen.__anext__())
+                        full_response += token
+                        # Send each token as a Server-Sent Event
+                        yield f"data: {json.dumps({'token': token})}\n\n"
+                    except StopAsyncIteration:
+                        break
+                
+                # Save the full response to qna.json
+                with open("data/qna.json", "r", encoding="utf-8") as f:
+                    qna_data = json.load(f)
+                qna_data[question] = full_response
+                with open("data/qna.json", "w", encoding="utf-8") as f:
+                    json.dump(qna_data, f, ensure_ascii=False, indent=4)
+                
+                print(f"Question: {question}\nAnswer: {full_response}\n")
+                
+                # Send completion signal
+                yield f"data: {json.dumps({'done': True})}\n\n"
+            finally:
+                loop.close()
         except Exception as e:
             # Log the full error for debugging, but only send a generic message to the user
             print(f"Error during streaming: {e}")
