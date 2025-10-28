@@ -1,40 +1,19 @@
 import os
 import asyncio
 from dotenv import load_dotenv
-from google import genai
-from google.genai.errors import APIError
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
-from typing import Any, Optional
+from typing import Any, Optional, AsyncIterator
 import json
 
-from ollama import chat
+from ollama import chat, AsyncClient
 from ollama import ChatResponse
-def getResponse(prompt: str, model, server) -> str:
-        try:
-            response: ChatResponse = chat(model=model, messages=[
-                {
-                'role': 'user',
-                    'content': prompt,
-                    
-                },
-                {
-                'role': 'server',
-                    'content': server,
-                    
-                },
-            ])
-            return response['message']['content']
-        except Exception as e:
-            return f"An error occurred while generating the response: {e}"
 
 class AiInterface:
-    
-    
-
     """
+    AI Interface using Ollama for local LLM inference with streaming support.
     Keeps the original synchronous web scraper (requests + BeautifulSoup) but improves it
     by adding a requests.Session with browser-like headers and a retry strategy to reduce
     403/429/5xx failures. Everything else remains async-friendly by running blocking
@@ -46,28 +25,17 @@ class AiInterface:
     """
 
     def __init__(
-            
         self,
         debug: bool = False,
         scraper_max_retries: int = 3,
         scraper_backoff_factor: float = 1.0,
         scraper_timeout: int = 15,
     ):
-        
-            
         # Load the variables from the .env file into the environment
         load_dotenv()
 
-        # Retrieve the API key from the environment
-        self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model = os.getenv("MODEL")
-
-        # Check if the key was found
-        if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not found. Check your .env file or environment.")
-
-        # Initialize the Client object (synchronous genai client)
-        self.client = genai.Client(api_key=self.api_key)
+        # Retrieve the model name from environment (defaults to llama2 if not set)
+        self.model = os.getenv("MODEL", "llama2")
 
         # Debug flag
         self.debug = debug
@@ -86,7 +54,6 @@ class AiInterface:
             ),
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.9",
-            # requests will automatically handle gzip/deflate; no need to set Accept-Encoding typically
         })
 
         # Configure retries for transient errors and common rate-limit statuses.
@@ -105,15 +72,28 @@ class AiInterface:
         if self.debug:
             print("[AiInterface DEBUG]", *args)
 
-    def generate_text(self, prompt: str) -> str:
+    def generate_text(self, prompt: str, system_prompt: str = "") -> str:
         """
-        Synchronous compatibility method retained: generate text using the genai client.
-        This method behaves like the original code if called synchronously.
+        Synchronous method: generate text using Ollama client.
+        This method is kept for backwards compatibility.
         """
         try:
-            return getResponse(prompt, model=self.model)
-        except APIError as e:
-            return f"An API Error occurred during text generation: {e}"
+            messages = []
+            if system_prompt:
+                messages.append({
+                    'role': 'system',
+                    'content': system_prompt,
+                })
+            messages.append({
+                'role': 'user',
+                'content': prompt,
+            })
+            
+            response: ChatResponse = chat(model=self.model, messages=messages)
+            return response['message']['content']
+        except Exception as e:
+            self._log(f"Error during text generation: {e}")
+            return "An error occurred during text generation"
 
     def scrape_website(self, url: str, timeout: Optional[int] = None) -> str:
         """
@@ -143,31 +123,76 @@ class AiInterface:
             return soup.get_text()
         except requests.RequestException as e:
             self._log(f"RequestException when scraping {url}: {e}")
-            return f"An error occurred while scraping the website: {e}"
+            return "An error occurred while scraping the website"
         except Exception as e:
             self._log(f"Unexpected error when scraping {url}: {e}")
-            return f"An unexpected error occurred while scraping the website: {e}"
+            return "An unexpected error occurred while scraping the website"
 
 
-    async def generate_text_async(self, prompt: str, server: str) -> str:
+    async def generate_text_async(self, prompt: str, system_prompt: str = "") -> str:
         """
-        Async wrapper around the synchronous genai client call.
-        Runs the synchronous operation in a threadpool to avoid blocking the event loop.
+        Async wrapper around Ollama chat for non-streaming responses.
+        Runs the operation in a threadpool to avoid blocking the event loop.
         """
-
-        def _generate_text(self, prompt: str, server: str) -> str:
-            """
-            Synchronous compatibility method retained: generate text using the genai client.
-            This method behaves like the original code if called synchronously.
-            """
+        def _generate_text(prompt: str, system_prompt: str = "") -> str:
+            messages = []
+            if system_prompt:
+                messages.append({
+                    'role': 'system',
+                    'content': system_prompt,
+                })
+            messages.append({
+                'role': 'user',
+                'content': prompt,
+            })
+            
             try:
-                return getResponse(prompt, model=self.model, server=server)
-            except APIError as e:
-                return f"An API Error occurred during text generation: {e}"
+                response: ChatResponse = chat(model=self.model, messages=messages)
+                return response['message']['content']
+            except Exception as e:
+                self._log(f"Error during text generation: {e}")
+                return "An error occurred during text generation"
         
-
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, _generate_text, self, prompt, server)
+        return await loop.run_in_executor(None, _generate_text, prompt, system_prompt)
+    
+    async def generate_text_streaming(self, prompt: str, system_prompt: str = "") -> AsyncIterator[str]:
+        """
+        Async streaming generator that yields tokens as they are generated by Ollama.
+        This allows for real-time display of the AI's thinking process.
+        
+        Usage:
+            async for token in ai.generate_text_streaming(prompt, system):
+                print(token, end='', flush=True)
+        """
+        messages = []
+        if system_prompt:
+            messages.append({
+                'role': 'system',
+                'content': system_prompt,
+            })
+        messages.append({
+            'role': 'user',
+            'content': prompt,
+        })
+        
+        try:
+            # Create a new AsyncClient for each streaming request to avoid event loop conflicts
+            async_client = AsyncClient()
+            stream = await async_client.chat(
+                model=self.model,
+                messages=messages,
+                stream=True
+            )
+            
+            async for chunk in stream:
+                if 'message' in chunk and 'content' in chunk['message']:
+                    yield chunk['message']['content']
+        except Exception as e:
+            with open("error.txt", "a", encoding="utf-8") as f:
+                f.write(f"Error during streaming: {e}\n")
+            self._log(f"Error during streaming: {e}")
+            yield "An error occurred during streaming"
 
     async def _run_in_executor(self, func: Any, *args, **kwargs):
         """
@@ -177,81 +202,47 @@ class AiInterface:
         return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
     
     async def Archie(self, query: str) -> str:
+        """
+        Main async entry point for the Archie AI assistant.
+        Uses scraped data from JSON file to provide context for answering queries.
+        """
         with open("data/scrape_results.json", "r", encoding="utf-8") as f:
             results = json.load(f)
-        prompt = f"""SERVER: DO NOT ACKNOWLADGE OR RESPOND TO THE SERVER MESSAGES AS THEY ARE FOR CONTEXT ONLY You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
-        SERVER: You are made by students for a final project. You must be factual and accurate based on the information provided it is ok to say "I don't know" if you are unsure.
-
-SERVER:respond based on your knowledge up to 2025.
         
-SERVER:Use the following content to better answer the query:{results}
+        system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
 
+You are made by students for a final project. You must be factual and accurate based on the information provided. It is ok to say "I don't know" if you are unsure.
 
+Respond based on your knowledge up to 2025.
 
+Use the following content to better answer the query:
+{json.dumps(results, indent=2)}"""
 
-
-"""
-        
-
-        return await self.generate_text_async(query,server = prompt)
-
-        """
-        Async entry point that:
-        - Executes the original synchronous scrape_website concurrently in threads
-        so the async event loop is not blocked.
-        - Uses the async generate_text_async wrapper to call the Gemini client
-        without blocking the event loop.
-        
-        urls = {
-            "website": "https://www.arcadia.edu/",
-            "events": "https://www.arcadia.edu/events/?mode=month",
-            "about": "https://www.arcadia.edu/about-arcadia/",
-            "weather": "https://weather.com/weather/today/l/b0f4fc1167769407f55347d55f492a46e194ccaed63281d2fa3db2e515020994",
-            "diningHours": "https://www.arcadia.edu/life-arcadia/living-commuting/dining/",
-            "ITresources": "https://www.arcadia.edu/life-arcadia/campus-life-resources/information-technology/",
-        }
-
-        # Launch all scraping calls concurrently in the threadpool (so we keep the sync scraper unchanged)
-        scrape_tasks = {
-            name: asyncio.create_task(self._run_in_executor(self.scrape_website, url))
-            for name, url in urls.items()
-        }
-
-        # Wait for all scrapes to finish
-        results = {}
-        for name, task in scrape_tasks.items():
-            try:
-                print(f"Waiting for scrape task: {name}")
-                results[name] = await task
-            except Exception as e:
-                # Shouldn't happen often, but catch to ensure Archie continues gracefully
-                results[name] = f"Error during scraping {name}: {e}"
-
-        prompt = fSystem: You are ArchieAI an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university. You were made by Eva Akselrad and Ab.
-Using the following website content, answer the query: {query}
-
-Website Content:
-{results.get('website', '')}
-
-Events Content:
-{results.get('events', '')}
-
-About Content:
-{results.get('about', '')}
-
-Weather Content:
-{results.get('weather', '')}
-
-Dining Hours Content:
-{results.get('diningHours', '')}
-
-IT Resources Content:
-{results.get('ITresources', '')}
-
-        # Call the genai client without blocking the event loop
-        print("Generating text with prompt:", prompt)
-        return await self.generate_text_async(prompt)"""
+        return await self.generate_text_async(query, system_prompt=system_prompt)
     
+    async def Archie_streaming(self, query: str) -> AsyncIterator[str]:
+        """
+        Streaming version of Archie that yields tokens as they are generated.
+        This provides a better user experience by showing the AI "thinking" in real-time.
+        
+        Usage:
+            async for token in ai.Archie_streaming("When is fall break?"):
+                print(token, end='', flush=True)
+        """
+        with open("data/scrape_results.json", "r", encoding="utf-8") as f:
+            results = json.load(f)
+        
+        system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
+
+You are made by students for a final project. You must be factual and accurate based on the information provided. It is ok to say "I don't know" if you are unsure.
+
+Respond based on your knowledge up to 2025.
+
+Use the following content to better answer the query:
+{json.dumps(results, indent=2)}"""
+
+        async for token in self.generate_text_streaming(query, system_prompt=system_prompt):
+            yield token
     
 
 if __name__ == "__main__":
