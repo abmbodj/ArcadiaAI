@@ -95,7 +95,8 @@ class AiInterface:
             response: ChatResponse = chat(model=self.model, messages=messages)
             return response['message']['content']
         except Exception as e:
-            return f"An error occurred during text generation: {e}"
+            self._log(f"Error during text generation: {e}")
+            return "An error occurred during text generation"
 
     def scrape_website(self, url: str, timeout: Optional[int] = None) -> str:
         """
@@ -125,10 +126,10 @@ class AiInterface:
             return soup.get_text()
         except requests.RequestException as e:
             self._log(f"RequestException when scraping {url}: {e}")
-            return f"An error occurred while scraping the website: {e}"
+            return "An error occurred while scraping the website"
         except Exception as e:
             self._log(f"Unexpected error when scraping {url}: {e}")
-            return f"An unexpected error occurred while scraping the website: {e}"
+            return "An unexpected error occurred while scraping the website"
 
 
     async def generate_text_async(self, prompt: str, system_prompt: str = "") -> str:
@@ -152,7 +153,8 @@ class AiInterface:
                 response: ChatResponse = chat(model=self.model, messages=messages)
                 return response['message']['content']
             except Exception as e:
-                return f"An error occurred during text generation: {e}"
+                self._log(f"Error during text generation: {e}")
+                return "An error occurred during text generation"
         
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, _generate_text, prompt, system_prompt)
@@ -188,7 +190,8 @@ class AiInterface:
                 if 'message' in chunk and 'content' in chunk['message']:
                     yield chunk['message']['content']
         except Exception as e:
-            yield f"An error occurred during streaming: {e}"
+            self._log(f"Error during streaming: {e}")
+            yield "An error occurred during streaming"
 
     async def _run_in_executor(self, func: Any, *args, **kwargs):
         """

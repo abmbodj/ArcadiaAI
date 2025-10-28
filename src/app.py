@@ -76,7 +76,9 @@ async def api_archie_stream():
             # Send completion signal
             yield f"data: {json.dumps({'done': True})}\n\n"
         except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            # Log the full error for debugging, but only send a generic message to the user
+            print(f"Error during streaming: {e}")
+            yield f"data: {json.dumps({'error': 'An error occurred while generating the response'})}\n\n"
     
     return fk.Response(generate(), mimetype='text/event-stream')
 
