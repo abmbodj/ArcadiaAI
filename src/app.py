@@ -11,18 +11,22 @@ src_dir = os.path.join(proj_root, "src")
 sys.path.insert(0, src_dir)
 from lib import GemInterface
 from lib import qrCodeGen
+from lib.SessionManager import SessionManager
 from werkzeug.security import generate_password_hash
 
 # Create the AiInterface instance (expected to have an async Archie method)
 gemini = GemInterface.AiInterface()
 
+# Create SessionManager instance
+session_manager = SessionManager(data_dir="data")
+
 app = fk.Flask(__name__)
 
-def Archie(query: str) -> str:
+def Archie(query: str, conversation_history: list = None) -> str:
     """
     Synchronous wrapper to run the async gemini.Archie in a new event loop.
     """
-    return asyncio.run(gemini.Archie(query))
+    return asyncio.run(gemini.Archie(query, conversation_history=conversation_history))
 
 
 
@@ -30,19 +34,51 @@ def Archie(query: str) -> str:
 
 @app.route("/", methods=["GET"])
 def home():
-    hometemplate = fk.render_template("index.html")
-    return hometemplate
+    # Check if user has a session
+    session_id = fk.request.cookies.get("session_id")
+    if session_id:
+        # User has session, redirect to chat
+        return fk.redirect(fk.url_for("index"))
+    # No session, show login page
+    return fk.render_template("home.html")
+
+@app.route("/index", methods=["GET"])
+def index():
+    # Main chat interface
+    session_id = fk.request.cookies.get("session_id")
+    if not session_id:
+        # No session, redirect to login
+        return fk.redirect(fk.url_for("home"))
+    return fk.render_template("index.html")
 
 @app.route("/api/archie", methods=["POST"])
 def api_archie():
     data = fk.request.get_json()
     question = data.get("question", "")
-    answer = Archie(question)
-    with open("data/qna.json", "r", encoding="utf-8") as f:
-        qna_data = json.load(f)
+    session_id = fk.request.cookies.get("session_id")
+    
+    # Get conversation history if session exists
+    conversation_history = []
+    if session_id:
+        conversation_history = session_manager.get_conversation_history(session_id)
+    
+    answer = Archie(question, conversation_history=conversation_history)
+    
+    # Save to session if session_id exists
+    if session_id:
+        session_manager.add_message(session_id, "user", question)
+        session_manager.add_message(session_id, "assistant", answer)
+    
+    # Still save to qna.json for backwards compatibility
+    try:
+        with open("data/qna.json", "r", encoding="utf-8") as f:
+            qna_data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        qna_data = {}
     qna_data[question] = answer
     with open("data/qna.json", "w", encoding="utf-8") as f:
         json.dump(qna_data, f, ensure_ascii=False, indent=4)
+    
     print(f"Question: {question}\nAnswer: {answer}\n")
     return fk.jsonify({"answer": answer})
 
@@ -54,28 +90,79 @@ def api_archie_stream():
     """
     data = fk.request.get_json()
     question = data.get("question", "")
+    session_id = fk.request.cookies.get("session_id")
     
     def generate():
         """Generator function for Server-Sent Events (SSE)"""
         full_response = ""
         loop = None
         try:
+            # Get conversation history if session exists
+            conversation_history = []
+            if session_id:
+                conversation_history = session_manager.get_conversation_history(session_id)
+            
             # Create a new event loop for this request (don't set it globally)
             loop = asyncio.new_event_loop()
             
-            async_gen = gemini.Archie_streaming(question)
+            async_gen = gemini.Archie_streaming(question, conversation_history=conversation_history)
             while True:
                 try:
-                    token = loop.run_until_complete(async_gen.__anext__())
-                    full_response += token
-                    # Send each token as a Server-Sent Event
-                    yield f"data: {json.dumps({'token': token})}\n\n"
+                    # Get the next item from the async generator
+                    chunk = loop.run_until_complete(async_gen.__anext__())
+                    
+                    # --- START FIX ---
+                    
+                    if isinstance(chunk, str):
+                        # 1. It's a string token.
+                        # Append it to the full response and stream it.
+                        full_response += chunk
+                        yield f"data: {json.dumps({'token': chunk})}\n\n"
+                    
+                    elif isinstance(chunk, dict):
+                        # 2. It's a dictionary (metadata).
+                        # Make it JSON-safe before streaming.
+                        
+                        if chunk.get('tool_name'):
+                            # Create a NEW, safe dictionary for the client
+                            json_safe_payload = {
+                                'tool_name': chunk.get('tool_name'),
+                                'tool_result_preview': str(chunk.get('tool_result'))[:500]
+                            }
+                            yield f"data: {json.dumps({'tool_call': json_safe_payload})}\n\n"
+                            
+                        elif chunk.get('final'):
+                            # This is just a signal, ignore it.
+                            pass
+                        
+                        # Add other 'elif' for other dict keys if needed
+                    
+                    else:
+                        # 3. It's something else (like the WebSearchResponse object).
+                        # DO NOT add it to full_response.
+                        # DO NOT send it as a 'token'.
+                        # Safely log it and send a debug message.
+                        
+                        chunk_type = type(chunk).__name__
+                        print(f"Warning: Received unexpected chunk type: {chunk_type}")
+                        
+                        # Optionally send a safe representation to the client
+                        yield f"data: {json.dumps({'debug_info': f'Received object: {chunk_type}'})}\n\n"
                 except StopAsyncIteration:
+                    # The generator is done.
                     break
             
-            # Save the full response to qna.json
-            with open("data/qna.json", "r", encoding="utf-8") as f:
-                qna_data = json.load(f)
+            # Save to session if session_id exists
+            if session_id:
+                session_manager.add_message(session_id, "user", question)
+                session_manager.add_message(session_id, "assistant", full_response)
+            
+            # Save the full response to qna.json for backwards compatibility
+            try:
+                with open("data/qna.json", "r", encoding="utf-8") as f:
+                    qna_data = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                qna_data = {}
             qna_data[question] = full_response
             with open("data/qna.json", "w", encoding="utf-8") as f:
                 json.dump(qna_data, f, ensure_ascii=False, indent=4)
@@ -86,8 +173,9 @@ def api_archie_stream():
             yield f"data: {json.dumps({'done': True})}\n\n"
         except Exception as e:
             # Log the full error for debugging, but only send a generic message to the user
-            print(f"Error during streaming: {e}")
-            yield f"data: {json.dumps({'error': 'An error occurred while generating the response'})}\n\n"
+            #print the traceback
+            import traceback
+            traceback.print_exc()
         finally:
             # Clean up the event loop
             if loop is not None and not loop.is_closed():
@@ -95,36 +183,142 @@ def api_archie_stream():
     
     return fk.Response(generate(), mimetype='text/event-stream')
 
+@app.route("/api/sessions/history", methods=["GET"])
+def get_session_history():
+    """Get conversation history for current session."""
+    session_id = fk.request.cookies.get("session_id")
+    if not session_id:
+        return fk.jsonify({"error": "No session found"}), 401
+    
+    history = session_manager.get_conversation_history(session_id)
+    return fk.jsonify({"history": history})
+
+@app.route("/api/sessions/list", methods=["GET"])
+def list_user_sessions():
+    """List all sessions for logged-in user."""
+    user_email = fk.request.cookies.get("user_email")
+    if not user_email:
+        return fk.jsonify({"error": "Not logged in"}), 401
+    
+    sessions = session_manager.get_all_user_sessions_with_preview(user_email)
+    return fk.jsonify({"sessions": sessions})
+
+@app.route("/api/sessions/<session_id>", methods=["GET"])
+def get_session_details(session_id):
+    """Get details of a specific session."""
+    user_email = fk.request.cookies.get("user_email")
+    
+    session_data = session_manager.get_session(session_id)
+    if not session_data:
+        return fk.jsonify({"error": "Session not found"}), 404
+    
+    # Check if user owns this session (or it's their current session)
+    current_session_id = fk.request.cookies.get("session_id")
+    if session_data.get("user_email") != user_email and session_id != current_session_id:
+        return fk.jsonify({"error": "Unauthorized"}), 403
+    
+    return fk.jsonify(session_data)
+
+@app.route("/api/sessions/<session_id>", methods=["DELETE"])
+def delete_session(session_id):
+    """Delete a specific session."""
+    user_email = fk.request.cookies.get("user_email")
+    current_session_id = fk.request.cookies.get("session_id")
+    
+    session_data = session_manager.get_session(session_id)
+    if not session_data:
+        return fk.jsonify({"error": "Session not found"}), 404
+    
+    # Check if user owns this session
+    if session_data.get("user_email") != user_email and session_id != current_session_id:
+        return fk.jsonify({"error": "Unauthorized"}), 403
+    
+    success = session_manager.delete_session(session_id, user_email)
+    if success:
+        return fk.jsonify({"message": "Session deleted"})
+    else:
+        return fk.jsonify({"error": "Failed to delete session"}), 500
+
+@app.route("/api/sessions/new", methods=["POST"])
+def create_new_session():
+    """Create a new chat session for the current user."""
+    user_email = fk.request.cookies.get("user_email")
+    
+    session_id = session_manager.create_session(user_email=user_email)
+    
+    resp = fk.make_response(fk.jsonify({"session_id": session_id}))
+    # Note: In production with HTTPS, add secure=True to all set_cookie calls
+    resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
+    return resp
+
+@app.route("/api/sessions/switch/<session_id>", methods=["POST"])
+def switch_session(session_id):
+    """Switch to a different session."""
+    user_email = fk.request.cookies.get("user_email")
+    
+    session_data = session_manager.get_session(session_id)
+    if not session_data:
+        return fk.jsonify({"error": "Session not found"}), 404
+    
+    # Check if user owns this session
+    if session_data.get("user_email") != user_email:
+        return fk.jsonify({"error": "Unauthorized"}), 403
+    
+    resp = fk.make_response(fk.jsonify({"message": "Session switched"}))
+    resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
+    return resp
+
 @app.route("/gchats", methods=["GET", "POST"])
 def gchats():
     session_id = fk.request.cookies.get("session_id")
     if not session_id:
-        session_id = uuid.uuid4().hex
-
+        # Create new guest session
+        session_id = session_manager.create_session(user_email=None)
 
     # render template and attach session cookie
-    resp = fk.make_response(fk.redirect(fk.url_for("chats")))
+    resp = fk.make_response(fk.redirect(fk.url_for("index")))
     print(f"New guest session started: {session_id}")
-    resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
+    # Note: In production with HTTPS, add secure=True
+    resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
     return resp
 @app.route("/chats", methods=["GET", "POST"])
 def chats():
     if fk.request.method == "POST":
         email = fk.request.form.get("email", "").strip()
         password = fk.request.form.get("password", "")
-        # replace the following simple check with your real authentication
+        
+        # Basic email validation
+        if not email or "@" not in email or len(email) > 255:
+            return fk.render_template("home.html", error="Please provide a valid email address")
+        
+        if not password or len(password) < 6:
+            return fk.render_template("home.html", error="Password must be at least 6 characters")
+        
         if email and password:
-            session_id = fk.request.cookies.get("session_id")
-            if not session_id:
-                session_id = uuid.uuid4().hex
-            # render template and attach session cookie 
-            resp = fk.make_response(fk.redirect(fk.url_for("chats")))
-            print(f"User {email} logged in with session: {session_id}")
-            resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
-            chatstemplate = fk.render_template("index.html")
-            return chatstemplate
-            
-            
+            # Try to authenticate user
+            if session_manager.authenticate_user(email, password):
+                # Create new session for logged-in user
+                session_id = session_manager.create_session(user_email=email)
+                
+                resp = fk.make_response(fk.redirect(fk.url_for("index")))
+                print(f"User {email} logged in with session: {session_id}")
+                # Note: In production with HTTPS, add secure=True
+                resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
+                resp.set_cookie("user_email", email, httponly=True, samesite="Strict")
+                return resp
+            else:
+                # User doesn't exist, create new account
+                if session_manager.create_user(email, password):
+                    session_id = session_manager.create_session(user_email=email)
+                    
+                    resp = fk.make_response(fk.redirect(fk.url_for("index")))
+                    print(f"New user {email} created with session: {session_id}")
+                    # Note: In production with HTTPS, add secure=True
+                    resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
+                    resp.set_cookie("user_email", email, httponly=True, samesite="Strict")
+                    return resp
+                else:
+                    return fk.render_template("home.html", error="Failed to create account")
         else:
             return fk.render_template("home.html", error="Please provide email and password")
 
