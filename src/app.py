@@ -70,14 +70,6 @@ def api_archie():
         session_manager.add_message(session_id, "assistant", answer)
     
     # Still save to qna.json for backwards compatibility
-    try:
-        with open("data/qna.json", "r", encoding="utf-8") as f:
-            qna_data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        qna_data = {}
-    qna_data[question] = answer
-    with open("data/qna.json", "w", encoding="utf-8") as f:
-        json.dump(qna_data, f, ensure_ascii=False, indent=4)
     
     print(f"Question: {question}\nAnswer: {answer}\n")
     return fk.jsonify({"answer": answer})
@@ -152,14 +144,7 @@ def api_archie_stream():
                 session_manager.add_message(session_id, "assistant", full_response)
             
             # Save the full response to qna.json for backwards compatibility
-            try:
-                with open("data/qna.json", "r", encoding="utf-8") as f:
-                    qna_data = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError):
-                qna_data = {}
-            qna_data[question] = full_response
-            with open("data/qna.json", "w", encoding="utf-8") as f:
-                json.dump(qna_data, f, ensure_ascii=False, indent=4)
+
             
             print(f"Question: {question}\nAnswer: {full_response}\n")
             

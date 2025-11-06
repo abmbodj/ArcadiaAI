@@ -97,7 +97,6 @@ ArchieAI uses Ollama's tool calling feature to intelligently search the web when
 All data is stored locally in JSON files:
 - `data/users.json` - User accounts with hashed passwords
 - `data/sessions/*.json` - Individual chat sessions
-- `data/scrape_results.json` - Cached university data from web scraping
 - `data/qna.json` - Question-answer pairs (legacy storage)
 
 ## Development
