@@ -111,16 +111,13 @@ def api_archie_stream():
                     # Get the next item from the async generator
                     chunk = loop.run_until_complete(async_gen.__anext__())
                     
-                    # --- START FIX ---
                     
                     if isinstance(chunk, str):
-                        # 1. It's a string token.
                         # Append it to the full response and stream it.
                         full_response += chunk
                         yield f"data: {json.dumps({'token': chunk})}\n\n"
                     
                     elif isinstance(chunk, dict):
-                        # 2. It's a dictionary (metadata).
                         # Make it JSON-safe before streaming.
                         
                         if chunk.get('tool_name'):
@@ -138,9 +135,6 @@ def api_archie_stream():
                         # Add other 'elif' for other dict keys if needed
                     
                     else:
-                        # 3. It's something else (like the WebSearchResponse object).
-                        # DO NOT add it to full_response.
-                        # DO NOT send it as a 'token'.
                         # Safely log it and send a debug message.
                         
                         chunk_type = type(chunk).__name__
