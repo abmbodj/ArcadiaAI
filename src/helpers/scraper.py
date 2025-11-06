@@ -7,7 +7,11 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from typing import Optional
-
+"""Scrapes websites and returns their text content.
+This code is unused as of now but may be useful in the future.
+This code used to be used in place of websearch/webfetch tool to provide
+more up-to-date information about Arcadia University for the AI to use.
+"""
 
 def scrape_website(url: str, timeout: Optional[int] = None) -> str:
     """

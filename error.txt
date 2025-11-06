@@ -1,2 +1,0 @@
-Event loop is closedError during streaming: 'async_generator' object has no attribute 'message'
-Error during streaming: 'async_generator' object has no attribute 'message'

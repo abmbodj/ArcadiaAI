@@ -75,38 +75,6 @@ class AiInterface:
         if self.debug:
             print("[AiInterface DEBUG]", *args)
 
-    def scrape_website(self, url: str, timeout: Optional[int] = None) -> str:
-        """
-        Improved synchronous web scraper that:
-        - uses a persistent requests.Session with browser-like headers
-        - has a Retry strategy for transient status codes (429, 5xx)
-        - keeps the interface synchronous (requests + BeautifulSoup) as requested
-        """
-        try:
-            to = timeout if timeout is not None else self.scraper_timeout
-            self._log(f"Scraping {url} with timeout={to}")
-            response = self.session.get(url, timeout=to, allow_redirects=True)
-            # If raise_for_status raises, we catch below and return a helpful message
-            try:
-                response.raise_for_status()
-            except requests.HTTPError as http_err:
-                # Provide helpful debug string but still try to return body if available
-                self._log(f"HTTP error for {url}: {http_err} (status {response.status_code})")
-                # If server returned some HTML (e.g., Cloudflare block), parse and return its text
-                # Otherwise, return the error string
-                if response.text:
-                    soup = BeautifulSoup(response.text, "html.parser")
-                    return soup.get_text()
-                return f"HTTP error when scraping {url}: {http_err}"
-
-            soup = BeautifulSoup(response.text, 'html.parser')
-            return soup.get_text()
-        except requests.RequestException as e:
-            self._log(f"RequestException when scraping {url}: {e}")
-            return "An error occurred while scraping the website"
-        except Exception as e:
-            self._log(f"Unexpected error when scraping {url}: {e}")
-            return "An unexpected error occurred while scraping the website"
 
 
 

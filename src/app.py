@@ -341,14 +341,7 @@ def background_checker():
 
     
 if __name__ == "__main__":
-    # Use threaded=True so the dev server can serve other requests while background tasks run
-    # For production, run with a WSGI/ASGI server (gunicorn/uvicorn) and a proper worker strategy.
 
-    #run a seperate python file in a seperate terminal using os.system that scrapes the arcadia website every hour in the background
-    #threading.Thread(target=lambda: os.system("python src/helpers/scraper.py"), daemon=True).start()
-    #print(Archie("What is Arcadia University short response please? What is the weather like there? Where is the dining hall located? What IT resources are available to students? When are finals for Fall 2025"))
 
     #qrCodeGen.make_qr(" https://cgs3mzng.use.devtunnels.ms:5000", show=True, save_path="websiteqr.png")
-
-
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
