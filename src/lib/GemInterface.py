@@ -4,13 +4,12 @@ from dotenv import load_dotenv
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from bs4 import BeautifulSoup
-from typing import Any, Optional, AsyncIterator
+from typing import Any,  AsyncIterator
 import json
 import sys
-from ollama import chat, AsyncClient, web_fetch, web_search
-from ollama import ChatResponse
+from ollama import AsyncClient, web_fetch, web_search
 import inspect
+import datetime
 class AiInterface:
     """
     AI Interface using Ollama for local LLM inference with streaming support.
@@ -266,14 +265,12 @@ If the university data doesn't contain the information needed, or if the query r
             async for token in ai.Archie_streaming("When is fall break?"):
                 print(token, end='', flush=True)
         """
-        with open("data/scrape_results.json", "r", encoding="utf-8") as f:
-            results = json.load(f)
         
         # Build context with conversation history
         history_context = ""
         if conversation_history:
             history_context = "\n\nConversation History:\n"
-            for msg in conversation_history[-5:]:  # Last 5 messages for context
+            for msg in conversation_history: 
                 role = msg.get("role", "user")
                 content = msg.get("content", "")
                 history_context += f"{role.upper()}: {content}\n"
@@ -283,9 +280,7 @@ If the university data doesn't contain the information needed, or if the query r
 You are made by students for a final project. You must be factual and accurate based on the information provided.
 History:
 {history_context}
-
-Use the following university data to answer questions You have realtime access to the following data:
-Weather, Events, Dining Hours, IT Resources, Academic Calendar, About Arcadia, General Website Info.
+The Time is {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """     
 
         async for token in self.async_WebSearch(query, system_prompt=system_prompt):
