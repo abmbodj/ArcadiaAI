@@ -282,14 +282,15 @@ def chats():
                 resp = fk.make_response(fk.redirect(fk.url_for("index")))
                 print(f"User {email} logged in with session: {session_id}")
                 # Note: In production with HTTPS, add secure=True
+
                 resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
                 resp.set_cookie("user_email", email, httponly=True, samesite="Strict")
                 return resp
             else:
                 # User doesn't exist, create new account
-                if session_manager.create_user(email, password):
+                if session_manager.create_user(email, password, ip_address=fk.request.remote_addr, device_info=fk.request.user_agent.string):
                     session_id = session_manager.create_session(user_email=email)
-                    
+
                     resp = fk.make_response(fk.redirect(fk.url_for("index")))
                     print(f"New user {email} created with session: {session_id}")
                     # Note: In production with HTTPS, add secure=True

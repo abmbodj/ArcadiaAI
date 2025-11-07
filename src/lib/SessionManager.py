@@ -44,8 +44,8 @@ class SessionManager:
         """Save users to JSON file."""
         with open(self.users_file, "w", encoding="utf-8") as f:
             json.dump(users, f, indent=4, ensure_ascii=False)
-    
-    def create_user(self, email: str, password: str) -> bool:
+
+    def create_user(self, email: str, password: str, ip_address: str, device_info: str) -> bool:
         """Create a new user account."""
         users = self._load_users()
         
@@ -56,6 +56,8 @@ class SessionManager:
             "email": email,
             "password_hash": generate_password_hash(password),
             "created_at": datetime.now().isoformat(),
+            "ip_address": ip_address,
+            "device_info": device_info,
             "sessions": []
         }
         
