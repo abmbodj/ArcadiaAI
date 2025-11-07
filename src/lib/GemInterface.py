@@ -171,6 +171,7 @@ If the university data doesn't contain the information needed, or if the query r
         if not OLLAMA_API_KEY:
             print("Error: OLLAMA_API_KEY (or OLLAMA_TOKEN) not found in environment; add it to your .env or export it before running.")
             sys.exit(1)
+        MODEL = os.getenv('OLLAMA_MODEL')
 
         # Normalize to OLLAMA_API_KEY for the Ollama client if the token was provided under OLLAMA_TOKEN.
         custom_headers = {
@@ -180,7 +181,7 @@ If the university data doesn't contain the information needed, or if the query r
         messages = [{'role': 'user', 'content': prompt}, {'role': 'system', 'content': system_prompt}]
         while True:
             response_stream = await client.chat(
-                model='qwen3:30b',
+                model=MODEL,
                 messages=messages,
                 tools=[client.web_search, client.web_fetch],
                 think=True,
@@ -278,7 +279,7 @@ If the university data doesn't contain the information needed, or if the query r
         system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
 
 You are made by students for a final project. You must be factual and concise based on the information provided. All responses should be professional yet to the point.
-Markdown IS NOT SUPPORTED OR RENDERED in the final output. DO NOT RESPOND WITH MARKDOWN FORMATTING.
+Markdown IS NOT SUPPORTED OR RENDERED in the final output. DO NOT RESPOND WITH MARKDOWN FORMATTING. You are not associated with Arcadia University officially as you are a student project.
 History:
 {history_context}
 The Time is {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
