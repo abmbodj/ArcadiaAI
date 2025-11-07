@@ -4,13 +4,12 @@ from dotenv import load_dotenv
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from bs4 import BeautifulSoup
-from typing import Any, Optional, AsyncIterator
+from typing import Any,  AsyncIterator
 import json
-
-from ollama import chat, AsyncClient
-from ollama import ChatResponse
-
+import sys
+from ollama import AsyncClient, web_fetch, web_search
+import inspect
+import datetime
 class AiInterface:
     """
     AI Interface using Ollama for local LLM inference with streaming support.
@@ -25,11 +24,14 @@ class AiInterface:
     """
 
     def __init__(
+        
         self,
+        
         debug: bool = False,
         scraper_max_retries: int = 3,
         scraper_backoff_factor: float = 1.0,
         scraper_timeout: int = 15,
+        available_tools = {'web_search': web_search, 'web_fetch': web_fetch}
     ):
         # Load the variables from the .env file into the environment
         load_dotenv()
@@ -72,90 +74,9 @@ class AiInterface:
         if self.debug:
             print("[AiInterface DEBUG]", *args)
 
-    def generate_text(self, prompt: str, system_prompt: str = "") -> str:
-        """
-        Synchronous method: generate text using Ollama client.
-        This method is kept for backwards compatibility.
-        """
-        try:
-            messages = []
-            if system_prompt:
-                messages.append({
-                    'role': 'system',
-                    'content': system_prompt,
-                })
-            messages.append({
-                'role': 'user',
-                'content': prompt,
-            })
-            
-            response: ChatResponse = chat(model=self.model, messages=messages)
-            return response['message']['content']
-        except Exception as e:
-            self._log(f"Error during text generation: {e}")
-            return "An error occurred during text generation"
-
-    def scrape_website(self, url: str, timeout: Optional[int] = None) -> str:
-        """
-        Improved synchronous web scraper that:
-        - uses a persistent requests.Session with browser-like headers
-        - has a Retry strategy for transient status codes (429, 5xx)
-        - keeps the interface synchronous (requests + BeautifulSoup) as requested
-        """
-        try:
-            to = timeout if timeout is not None else self.scraper_timeout
-            self._log(f"Scraping {url} with timeout={to}")
-            response = self.session.get(url, timeout=to, allow_redirects=True)
-            # If raise_for_status raises, we catch below and return a helpful message
-            try:
-                response.raise_for_status()
-            except requests.HTTPError as http_err:
-                # Provide helpful debug string but still try to return body if available
-                self._log(f"HTTP error for {url}: {http_err} (status {response.status_code})")
-                # If server returned some HTML (e.g., Cloudflare block), parse and return its text
-                # Otherwise, return the error string
-                if response.text:
-                    soup = BeautifulSoup(response.text, "html.parser")
-                    return soup.get_text()
-                return f"HTTP error when scraping {url}: {http_err}"
-
-            soup = BeautifulSoup(response.text, 'html.parser')
-            return soup.get_text()
-        except requests.RequestException as e:
-            self._log(f"RequestException when scraping {url}: {e}")
-            return "An error occurred while scraping the website"
-        except Exception as e:
-            self._log(f"Unexpected error when scraping {url}: {e}")
-            return "An unexpected error occurred while scraping the website"
 
 
-    async def generate_text_async(self, prompt: str, system_prompt: str = "") -> str:
-        """
-        Async wrapper around Ollama chat for non-streaming responses.
-        Runs the operation in a threadpool to avoid blocking the event loop.
-        """
-        def _generate_text(prompt: str, system_prompt: str = "") -> str:
-            messages = []
-            if system_prompt:
-                messages.append({
-                    'role': 'system',
-                    'content': system_prompt,
-                })
-            messages.append({
-                'role': 'user',
-                'content': prompt,
-            })
-            
-            try:
-                response: ChatResponse = chat(model=self.model, messages=messages)
-                return response['message']['content']
-            except Exception as e:
-                self._log(f"Error during text generation: {e}")
-                return "An error occurred during text generation"
-        
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, _generate_text, prompt, system_prompt)
-    
+
     async def generate_text_streaming(self, prompt: str, system_prompt: str = "") -> AsyncIterator[str]:
         """
         Async streaming generator that yields tokens as they are generated by Ollama.
@@ -176,72 +97,194 @@ class AiInterface:
             'content': prompt,
         })
         
-        try:
-            # Create a new AsyncClient for each streaming request to avoid event loop conflicts
-            async_client = AsyncClient()
-            stream = await async_client.chat(
-                model=self.model,
-                messages=messages,
-                stream=True
-            )
-            
-            async for chunk in stream:
-                if 'message' in chunk and 'content' in chunk['message']:
-                    yield chunk['message']['content']
-        except Exception as e:
-            with open("error.txt", "a", encoding="utf-8") as f:
-                f.write(f"Error during streaming: {e}\n")
-            self._log(f"Error during streaming: {e}")
-            yield "An error occurred during streaming"
+        
+        # Create a new AsyncClient for each streaming request to avoid event loop conflicts
+        async_client = AsyncClient()
+        stream = await async_client.chat(
+            model=self.model,
+            messages=messages,
+            stream=True,
 
-    async def _run_in_executor(self, func: Any, *args, **kwargs):
-        """
-        Helper to run any synchronous function in the default threadpool and return its result.
-        """
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
+        
+        )
+
+        async for chunk in stream:
+            if 'message' in chunk and 'content' in chunk['message']:
+                yield chunk['message']['content']
+       
     
-    async def Archie(self, query: str) -> str:
+    async def Archie(self, query: str, conversation_history: list = None) -> str:
         """
         Main async entry point for the Archie AI assistant.
         Uses scraped data from JSON file to provide context for answering queries.
+        Uses Ollama tool calling to enable web search when needed.
         """
         with open("data/scrape_results.json", "r", encoding="utf-8") as f:
             results = json.load(f)
         
-        system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
+        # Build messages list with system prompt and conversation history
+        messages = []
+        
+        system_content = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
 
-You are made by students for a final project. You must be factual and accurate based on the information provided. It is ok to say "I don't know" if you are unsure.
+You are made by students for a final project. You must be factual and accurate based on the information provided.
 
 Respond based on your knowledge up to 2025.
 
-Use the following content to better answer the query:
-{json.dumps(results, indent=2)}"""
+Use the following university data to answer questions:
+{json.dumps(results, indent=2)}
 
-        return await self.generate_text_async(query, system_prompt=system_prompt)
+If the university data doesn't contain the information needed, or if the query requires current/real-time information, you can use the search_web tool to find additional information."""
+        
+        messages.append({
+            'role': 'system',
+            'content': system_content
+        })
+        
+        # Add conversation history
+        if conversation_history:
+            for msg in conversation_history[-5:]:  # Last 5 messages for context
+                messages.append({
+                    'role': msg.get('role', 'user'),
+                    'content': msg.get('content', '')
+                })
+        
+        # Add current query
+        messages.append({
+            'role': 'user',
+            'content': query
+        })
+        
+        # Call with tools - run in executor since it's synchronous
+
+    async def async_WebSearch(self, prompt: str, system_prompt: str = "", available_tools = {'web_search': web_search, 'web_fetch': web_fetch}) -> AsyncIterator[Any]:
+        
+            
+        """
+        Async generator that yields streamed content chunks as they arrive.
+        Yields:
+        - str: incremental content chunks from the assistant
+        - dict: tool call results in the form {'tool_name': ..., 'tool_result': ...}
+        - dict: final message when done: {'final': True, 'message': final_response_message}
+        """
+        OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY') or os.getenv('OLLAMA_TOKEN')
+        if not OLLAMA_API_KEY:
+            print("Error: OLLAMA_API_KEY (or OLLAMA_TOKEN) not found in environment; add it to your .env or export it before running.")
+            sys.exit(1)
+
+        # Normalize to OLLAMA_API_KEY for the Ollama client if the token was provided under OLLAMA_TOKEN.
+        custom_headers = {
+            "Authorization": f"Bearer {OLLAMA_API_KEY}"
+        }
+        client = AsyncClient(headers=custom_headers)
+        messages = [{'role': 'user', 'content': prompt}, {'role': 'system', 'content': system_prompt}]
+        while True:
+            response_stream = await client.chat(
+                model='qwen3:30b',
+                messages=messages,
+                tools=[client.web_search, client.web_fetch],
+                think=True,
+                stream=True
+            )
+
+            final_response_message = {
+                'role': 'assistant',
+                'content': '',
+                'thinking': None,
+                'tool_calls': None
+            }
+
+            # Iterate asynchronously through streamed chunks and yield content as it arrives
+            async for response_chunk in response_stream:
+                chunk_message = response_chunk.message
+
+                if chunk_message.thinking:
+                    if not final_response_message['thinking']:
+                        final_response_message['thinking'] = chunk_message.thinking
+
+                if chunk_message.content:
+                    final_response_message['content'] += chunk_message.content
+                    # yield incremental content chunk
+                    yield chunk_message.content
+
+                if chunk_message.tool_calls:
+                    final_response_message['tool_calls'] = chunk_message.tool_calls
+
+            # Add the assistant's final streamed message into the conversation history
+            messages.append(final_response_message)
+
+            # If the model requested tools, execute them and yield their results, then continue the loop
+            if final_response_message['tool_calls']:
+                tool_calls = final_response_message['tool_calls']
+
+                for tool_call in tool_calls:
+                    tool_name = tool_call.function.name
+                    function_to_call = available_tools.get(tool_name)
+
+                    if function_to_call:
+                        args = getattr(tool_call.function, 'arguments', {}) or {}
+
+                        if inspect.iscoroutinefunction(function_to_call):
+                            result = await function_to_call(**args)
+                        else:
+                            maybe_result = function_to_call(**args)
+                            if inspect.isawaitable(maybe_result):
+                                result = await maybe_result
+                            else:
+                                result = maybe_result
+
+                        # Append tool result to messages so the model can continue the conversation
+                        messages.append({
+                            'role': 'tool',
+                            'content': str(result)[:2000 * 4],
+                            'tool_name': tool_name
+                        })
+
+                        # Yield the tool result to the caller
+                        yield {'tool_name': tool_name, 'tool_result': result}
+                    else:
+                        messages.append({
+                            'role': 'tool',
+                            'content': f'Tool {tool_name} not found',
+                            'tool_name': tool_name
+                        })
+                        yield {'tool_name': tool_name, 'tool_result': None, 'error': 'tool_not_found'}
+                # continue to next iteration so the model can respond to tool results
+            else:
+                # No tool calls: streaming finished; yield final assembled message and exit
+                yield {'final': True, 'message': final_response_message}
+                break
     
-    async def Archie_streaming(self, query: str) -> AsyncIterator[str]:
+    async def Archie_streaming(self, query: str, conversation_history: list = None) -> AsyncIterator[str]:
         """
         Streaming version of Archie that yields tokens as they are generated.
-        This provides a better user experience by showing the AI "thinking" in real-time.
+        Note: Tool calling with streaming is complex, so this version uses the standard approach.
+        For full tool calling support, use the non-streaming Archie() method.
         
         Usage:
             async for token in ai.Archie_streaming("When is fall break?"):
                 print(token, end='', flush=True)
         """
-        with open("data/scrape_results.json", "r", encoding="utf-8") as f:
-            results = json.load(f)
+        
+        # Build context with conversation history
+        history_context = ""
+        if conversation_history:
+            history_context = "\n\nConversation History:\n"
+            for msg in conversation_history: 
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                history_context += f"{role.upper()}: {content}\n"
         
         system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
 
-You are made by students for a final project. You must be factual and accurate based on the information provided. It is ok to say "I don't know" if you are unsure.
+You are made by students for a final project. You must be factual and concise based on the information provided. All responses should be professional yet to the point.
+Markdown IS NOT SUPPORTED OR RENDERED in the final output. DO NOT RESPOND WITH MARKDOWN FORMATTING.
+History:
+{history_context}
+The Time is {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+"""     
 
-Respond based on your knowledge up to 2025.
-
-Use the following content to better answer the query:
-{json.dumps(results, indent=2)}"""
-
-        async for token in self.generate_text_streaming(query, system_prompt=system_prompt):
+        async for token in self.async_WebSearch(query, system_prompt=system_prompt):
             yield token
     
 

@@ -43,7 +43,7 @@
   <div class="login-container">
     <div class="login-card" role="main" aria-labelledby="login-heading">
       <h1 id="login-heading" class="heading" style="color: #2b6ef6;">ArchieAI</h1>
-      <p class="sub">Sign in to continue to Archie — or continue as a guest</p>
+      <p class="sub">Sign in to continue to Archie — or create an account</p>
 
       <!-- Simple login form; POSTs to /login. Replace with real auth handling server-side. -->
       <form id="login-form" action="/chats" method="post" autocomplete="on">
@@ -51,15 +51,25 @@
         <input class="login-field" type="password" name="password" placeholder="Password" required aria-label="Password" />
         <div class="login-actions">
         <button type="submit" class="btn btn-primary">Log in</button>
-          <!-- Guest / continue button will navigate to the existing index page -->
-        <button type="submit" class="btn btn-ghost" formaction="/gchats" formmethod="post">Continue as guest</button>
 
         </div>
       </form>
 
       <div class="login-footer">
-        <span>Need help?</span>
-        <a href="mailto:eakselrad@arcadia.edu" class="small-link">Contact Eva Akselrad or Ab</a>
+        <span>By using this website and logging in you agree to have the following data stored and used:</span>
+        <ul>
+          <li>Email address</li>
+          <li>Password (hashed)</li>
+          <li>Conversation history</li>
+          <li>Usage data</li>
+          <li>IP address And other device/browser information</li>
+          
+        </ul>
+        <span>Also note that this site does use cookies to save session data and other login information</span>
+        <span>If you do not agree to this, please do not continue with login.</span>
+        <span>For more information Eva or Ab (who are probably presenting right now)</span>
+        <p>And finally, Thank you for using ArchieAI!</p>
+
       </div>
     </div>
   </div>

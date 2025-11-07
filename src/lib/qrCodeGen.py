@@ -65,5 +65,5 @@ def make_qr(
 if __name__ == "__main__":
         # quick demo when run as a script
 
-        sample = "https://bjt426ms-5000.use.devtunnels.ms/" if len(sys.argv) == 1 else " ".join(sys.argv[1:])
+        sample = "https://49477d2b6dec.ngrok-free.app" if len(sys.argv) == 1 else " ".join(sys.argv[1:])
         make_qr(sample, show=True, save_path="sample_qr.png")

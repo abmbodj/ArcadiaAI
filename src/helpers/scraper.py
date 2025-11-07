@@ -7,7 +7,11 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from typing import Optional
-
+"""Scrapes websites and returns their text content.
+This code is unused as of now but may be useful in the future.
+This code used to be used in place of websearch/webfetch tool to provide
+more up-to-date information about Arcadia University for the AI to use.
+"""
 
 def scrape_website(url: str, timeout: Optional[int] = None) -> str:
     """
@@ -74,11 +78,14 @@ def background_checker():
 
     dictionary = {}
     for name, url in urls.items():
+        #sanitize result by removing newlines and excessive whitespace
         result = scrape_website(url=url)
+        result = ' '.join(result.split())
         dictionary[name] = result
 
     # ensure the data directory exists, then write the collected dictionary as JSON
     os.makedirs(os.path.dirname("data/scrape_results.json"), exist_ok=True)
+    #sanitize the data i.e removing /n and \n and other chars like that
     with open("data/scrape_results.json", "w", encoding="utf-8") as f:
         json.dump(dictionary, f, ensure_ascii=False, indent=4)
 import time
