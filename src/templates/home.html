@@ -44,17 +44,6 @@
     <div class="login-card" role="main" aria-labelledby="login-heading">
       <h1 id="login-heading" class="heading" style="color: #2b6ef6;">ArchieAI</h1>
       <p class="sub">Sign in to continue to Archie — or create an account</p>
-
-      <!-- Simple login form; POSTs to /login. Replace with real auth handling server-side. -->
-      <form id="login-form" action="/chats" method="post" autocomplete="on">
-        <input class="login-field" type="email" name="email" placeholder="Email" required aria-label="Email" />
-        <input class="login-field" type="password" name="password" placeholder="Password" required aria-label="Password" />
-        <div class="login-actions">
-        <button type="submit" class="btn btn-primary">Log in</button>
-
-        </div>
-      </form>
-
       <div class="login-footer">
         <span>By using this website and logging in you agree to have the following data stored and used:</span>
         <ul>
@@ -71,6 +60,19 @@
         <p>And finally, Thank you for using ArchieAI!</p>
 
       </div>
+
+      <!-- Simple login form; POSTs to /login. Replace with real auth handling server-side. -->
+      <form id="login-form" action="/chats" method="post" autocomplete="on">
+        <input class="login-field" type="email" name="email" placeholder="Email" required aria-label="Email" />
+        <input class="login-field" type="password" name="password" placeholder="Password" required aria-label="Password" />
+        <div class="login-actions">
+          
+        <button type="submit" class="btn btn-primary">Log in</button>
+
+        </div>
+      </form>
+
+      
     </div>
   </div>
 

@@ -171,7 +171,7 @@ class SessionManager:
         if session_data is None:
             return []
         
-        return session_data.get("messages", [])
+        return session_data.get("messages", [])[:10]
     
     def delete_session(self, session_id: str, user_email: Optional[str] = None) -> bool:
         """Delete a chat session."""

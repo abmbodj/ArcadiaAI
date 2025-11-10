@@ -5,8 +5,7 @@ import threading
 import asyncio
 import flask as fk
 import json
-# Ensure your project src is on the path (same as your original)
-proj_root = os.path.dirname(__file__)          # project root if app.py is there
+proj_root = os.path.dirname(__file__)         
 src_dir = os.path.join(proj_root, "src")
 sys.path.insert(0, src_dir)
 from lib import GemInterface
@@ -14,10 +13,8 @@ from lib import qrCodeGen
 from lib.SessionManager import SessionManager
 from werkzeug.security import generate_password_hash
 
-# Create the AiInterface instance (expected to have an async Archie method)
 gemini = GemInterface.AiInterface()
 
-# Create SessionManager instance
 session_manager = SessionManager(data_dir="data")
 
 app = fk.Flask(__name__)
@@ -69,11 +66,10 @@ def api_archie():
         session_manager.add_message(session_id, "user", question)
         session_manager.add_message(session_id, "assistant", answer)
     
-    # Still save to qna.json for backwards compatibility
     
     print(f"Question: {question}\nAnswer: {answer}\n")
     return fk.jsonify({"answer": answer})
-
+import datetime
 @app.route("/api/archie/stream", methods=["POST"])
 def api_archie_stream():
     """
@@ -86,6 +82,7 @@ def api_archie_stream():
     
     def generate():
         """Generator function for Server-Sent Events (SSE)"""
+        second_count = datetime.datetime.now().second
         full_response = ""
         loop = None
         try:
@@ -124,7 +121,6 @@ def api_archie_stream():
                             # This is just a signal, ignore it.
                             pass
                         
-                        # Add other 'elif' for other dict keys if needed
                     
                     else:
                         # Safely log it and send a debug message.
@@ -140,6 +136,7 @@ def api_archie_stream():
             
             # Save to session if session_id exists
             if session_id:
+
                 session_manager.add_message(session_id, "user", question)
                 session_manager.add_message(session_id, "assistant", full_response)
             
@@ -156,6 +153,7 @@ def api_archie_stream():
             import traceback
             traceback.print_exc()
         finally:
+            
             # Clean up the event loop
             if loop is not None and not loop.is_closed():
                 loop.close()
@@ -226,7 +224,6 @@ def create_new_session():
     session_id = session_manager.create_session(user_email=user_email)
     
     resp = fk.make_response(fk.jsonify({"session_id": session_id}))
-    # Note: In production with HTTPS, add secure=True to all set_cookie calls
     resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
     return resp
 
@@ -257,7 +254,6 @@ def gchats():
     # render template and attach session cookie
     resp = fk.make_response(fk.redirect(fk.url_for("index")))
     print(f"New guest session started: {session_id}")
-    # Note: In production with HTTPS, add secure=True
     resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
     return resp
 @app.route("/chats", methods=["GET", "POST"])
@@ -293,7 +289,6 @@ def chats():
 
                     resp = fk.make_response(fk.redirect(fk.url_for("index")))
                     print(f"New user {email} created with session: {session_id}")
-                    # Note: In production with HTTPS, add secure=True
                     resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
                     resp.set_cookie("user_email", email, httponly=True, samesite="Strict")
                     return resp
@@ -301,6 +296,7 @@ def chats():
                     return fk.render_template("home.html", error="Failed to create account")
         else:
             return fk.render_template("home.html", error="Please provide email and password")
+    return fk.render_template("home.html")
 
 
 def background_checker():
