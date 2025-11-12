@@ -3,6 +3,7 @@ import sys
 import uuid
 import threading
 import asyncio
+import time
 import flask as fk
 import json
 proj_root = os.path.dirname(__file__)         
@@ -11,11 +12,13 @@ sys.path.insert(0, src_dir)
 from lib import GemInterface
 from lib import qrCodeGen
 from lib.SessionManager import SessionManager
+from lib.DataCollector import DataCollector
 from werkzeug.security import generate_password_hash
 
 gemini = GemInterface.AiInterface()
 
 session_manager = SessionManager(data_dir="data")
+data_collector = DataCollector(data_dir="data")
 
 app = fk.Flask(__name__)
 
@@ -50,9 +53,12 @@ def index():
 
 @app.route("/api/archie", methods=["POST"])
 def api_archie():
+    start_time = time.time()
+    
     data = fk.request.get_json()
     question = data.get("question", "")
     session_id = fk.request.cookies.get("session_id")
+    user_email = fk.request.cookies.get("user_email")
     
     # Get conversation history if session exists
     conversation_history = []
@@ -61,11 +67,24 @@ def api_archie():
     
     answer = Archie(question, conversation_history=conversation_history)
     
+    # Calculate generation time
+    generation_time = time.time() - start_time
+    
     # Save to session if session_id exists
     if session_id:
         session_manager.add_message(session_id, "user", question)
         session_manager.add_message(session_id, "assistant", answer)
     
+    # Collect analytics data
+    data_collector.log_interaction(
+        session_id=session_id if session_id else "no_session",
+        user_email=user_email,
+        ip_address=fk.request.remote_addr,
+        device_info=fk.request.user_agent.string,
+        question=question,
+        answer=answer,
+        generation_time_seconds=generation_time
+    )
     
     print(f"Question: {question}\nAnswer: {answer}\n")
     return fk.jsonify({"answer": answer})
@@ -76,9 +95,16 @@ def api_archie_stream():
     Streaming endpoint that returns AI responses token by token.
     This provides a better user experience by showing the AI "thinking" in real-time.
     """
+    start_time = time.time()
+    
     data = fk.request.get_json()
     question = data.get("question", "")
     session_id = fk.request.cookies.get("session_id")
+    user_email = fk.request.cookies.get("user_email")
+    
+    # Capture request info for data collection
+    ip_address = fk.request.remote_addr
+    device_info = fk.request.user_agent.string
     
     def generate():
         """Generator function for Server-Sent Events (SSE)"""
@@ -134,11 +160,25 @@ def api_archie_stream():
                     # The generator is done.
                     break
             
+            # Calculate generation time
+            generation_time = time.time() - start_time
+            
             # Save to session if session_id exists
             if session_id:
 
                 session_manager.add_message(session_id, "user", question)
                 session_manager.add_message(session_id, "assistant", full_response)
+            
+            # Collect analytics data
+            data_collector.log_interaction(
+                session_id=session_id if session_id else "no_session",
+                user_email=user_email,
+                ip_address=ip_address,
+                device_info=device_info,
+                question=question,
+                answer=full_response,
+                generation_time_seconds=generation_time
+            )
             
             # Save the full response to qna.json for backwards compatibility
 
