@@ -38,7 +38,7 @@ class DataCollector:
         ]
         
         with open(self.csv_file, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
+            writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerow(headers)
     
     def log_interaction(
@@ -80,7 +80,7 @@ class DataCollector:
             f"{generation_time_seconds:.2f}"
         ]
         
-        # Append to CSV file
+        # Append to CSV file with proper quoting for text fields
         with open(self.csv_file, "a", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
+            writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerow(row)
