@@ -102,7 +102,7 @@ def api_archie_stream():
     session_id = fk.request.cookies.get("session_id")
     user_email = fk.request.cookies.get("user_email")
     
-    # Capture request info for data collection test
+    # Capture request info for data collection
     ip_address = fk.request.remote_addr
     device_info = fk.request.user_agent.string
     
