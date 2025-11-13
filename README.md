@@ -2,7 +2,7 @@
   <img src="/static/imgs/Mini Knight Laptop.svg" alt="ArchieAI Logo" width="150"/>
 </p>
 
-<h1 align="center">ArchieAI</h1>
+<h1 align="center">ArcieAI</h1>
 
 <p align="center">
   Archie AI is an AI-powered assistant designed to help users and students with a variety of tasks, from answering questions to providing recommendations and generating content. Built on Ollama for local LLM inference, ArchieAI aims to enhance productivity and make your experience at Arcadia University more efficient and enjoyable.
