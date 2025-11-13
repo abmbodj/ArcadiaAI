@@ -76,6 +76,7 @@ class AiInterface:
 
 
 
+    #I dont think this is used anywhere but im keeping it just in case
 
     async def generate_text_streaming(self, prompt: str, system_prompt: str = "") -> AsyncIterator[str]:
         """
@@ -112,6 +113,8 @@ class AiInterface:
             if 'message' in chunk and 'content' in chunk['message']:
                 yield chunk['message']['content']
        
+    
+    #I dont think this is used anywhere but im keeping it just in case
     
     async def Archie(self, query: str, conversation_history: list = None) -> str:
         """
@@ -174,6 +177,7 @@ If the university data doesn't contain the information needed, or if the query r
         MODEL = os.getenv('OLLAMA_MODEL')
 
         # Normalize to OLLAMA_API_KEY for the Ollama client if the token was provided under OLLAMA_TOKEN.
+        # This took me way too long to figure out Headers are of the devil and there is no documentation on this.
         custom_headers = {
             "Authorization": f"Bearer {OLLAMA_API_KEY}"
         }
