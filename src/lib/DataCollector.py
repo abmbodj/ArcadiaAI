@@ -48,7 +48,7 @@ class DataCollector:
             device_info: User agent string
             question: User's question
             answer: AI's answer
-            generation_time_seconds: Time taken to generate the answer
+            generation_time_seconds: Time taken to generate the answe
         """
         timestamp = datetime.now().isoformat()
         question_length = len(question)
