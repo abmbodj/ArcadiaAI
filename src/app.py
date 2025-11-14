@@ -367,5 +367,5 @@ def background_checker():
 if __name__ == "__main__":
 
 
-    #qrCodeGen.make_qr(" https://cgs3mzng.use.devtunnels.ms:5000", show=True, save_path="websiteqr.png")
+    qrCodeGen.make_qr("https://118ce87f29d4.ngrok-free.app", show=True, save_path="websiteqr.png")
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
