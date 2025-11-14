@@ -64,5 +64,5 @@ def make_qr(
 
 if __name__ == "__main__":
 
-        sample = "https://645de3d33828.ngrok-free.app" if len(sys.argv) == 1 else " ".join(sys.argv[1:])
+        sample = "https://000af587df38.ngrok-free.app" if len(sys.argv) == 1 else " ".join(sys.argv[1:])
         make_qr(sample, show=True, save_path="sample_qr.png")

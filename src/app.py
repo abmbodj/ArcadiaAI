@@ -107,8 +107,6 @@ def api_archie_stream():
     device_info = fk.request.user_agent.string
     
     def generate():
-        """Generator function for Server-Sent Events (SSE)"""
-        second_count = datetime.datetime.now().second
         full_response = ""
         loop = None
         try:
@@ -117,7 +115,7 @@ def api_archie_stream():
             if session_id:
                 conversation_history = session_manager.get_conversation_history(session_id)
             
-            # Create a new event loop for this request (don't set it globally)
+            # Create a new event loop for this request 
             loop = asyncio.new_event_loop()
             
             async_gen = gemini.Archie_streaming(question, conversation_history=conversation_history)
@@ -133,7 +131,7 @@ def api_archie_stream():
                         yield f"data: {json.dumps({'token': chunk})}\n\n"
                     
                     elif isinstance(chunk, dict):
-                        # Make it JSON-safe before streaming.
+                        # Make it JSON-safe before streaming. because trial and error is the only way to figure this out apparently
                         
                         if chunk.get('tool_name'):
                             # Create a NEW, safe dictionary for the client
@@ -160,7 +158,7 @@ def api_archie_stream():
                     # The generator is done.
                     break
             
-            # Calculate generation time
+            # Calculate generation time 
             generation_time = time.time() - start_time
             
             # Save to session if session_id exists
@@ -169,7 +167,7 @@ def api_archie_stream():
                 session_manager.add_message(session_id, "user", question)
                 session_manager.add_message(session_id, "assistant", full_response)
             
-            # Collect analytics data
+            # Collect analytics data I LOVE DATA COLLECTION
             data_collector.log_interaction(
                 session_id=session_id if session_id else "no_session",
                 user_email=user_email,
@@ -180,16 +178,14 @@ def api_archie_stream():
                 generation_time_seconds=generation_time
             )
             
-            # Save the full response to qna.json for backwards compatibility
-
             
             print(f"Question: {question}\nAnswer: {full_response}\n")
             
             # Send completion signal
             yield f"data: {json.dumps({'done': True})}\n\n"
         except Exception as e:
-            # Log the full error for debugging, but only send a generic message to the user
-            #print the traceback
+            #print the traceback for debugging I may remove this but for now its useful
+            print(f"Error during streaming generation: {e}")
             import traceback
             traceback.print_exc()
         finally:
@@ -200,6 +196,7 @@ def api_archie_stream():
     
     return fk.Response(generate(), mimetype='text/event-stream')
 
+#Gets conversation history for current session
 @app.route("/api/sessions/history", methods=["GET"])
 def get_session_history():
     """Get conversation history for current session."""
@@ -210,6 +207,7 @@ def get_session_history():
     history = session_manager.get_conversation_history(session_id)
     return fk.jsonify({"history": history})
 
+#List all sessions for current user
 @app.route("/api/sessions/list", methods=["GET"])
 def list_user_sessions():
     """List all sessions for logged-in user."""
@@ -220,6 +218,7 @@ def list_user_sessions():
     sessions = session_manager.get_all_user_sessions_with_preview(user_email)
     return fk.jsonify({"sessions": sessions})
 
+#get details for a specific session
 @app.route("/api/sessions/<session_id>", methods=["GET"])
 def get_session_details(session_id):
     """Get details of a specific session."""
@@ -236,6 +235,7 @@ def get_session_details(session_id):
     
     return fk.jsonify(session_data)
 
+#Delete a specific session
 @app.route("/api/sessions/<session_id>", methods=["DELETE"])
 def delete_session(session_id):
     """Delete a specific session."""
@@ -256,6 +256,7 @@ def delete_session(session_id):
     else:
         return fk.jsonify({"error": "Failed to delete session"}), 500
 
+#Create a new session
 @app.route("/api/sessions/new", methods=["POST"])
 def create_new_session():
     """Create a new chat session for the current user."""
@@ -267,6 +268,7 @@ def create_new_session():
     resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
     return resp
 
+#Switch to a different session
 @app.route("/api/sessions/switch/<session_id>", methods=["POST"])
 def switch_session(session_id):
     """Switch to a different session."""
@@ -284,6 +286,7 @@ def switch_session(session_id):
     resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
     return resp
 
+#This is not used and guests are no longer supported. I am keeping it for potential future use.
 @app.route("/gchats", methods=["GET", "POST"])
 def gchats():
     session_id = fk.request.cookies.get("session_id")
@@ -306,9 +309,9 @@ def chats():
         if not email or "@" not in email or len(email) > 255:
             return fk.render_template("home.html", error="Please provide a valid email address")
         
-        if not password or len(password) < 6:
-            return fk.render_template("home.html", error="Password must be at least 6 characters")
-        
+        if not password:
+            return fk.render_template("home.html", error="Password is required")
+
         if email and password:
             # Try to authenticate user
             if session_manager.authenticate_user(email, password):
@@ -317,7 +320,6 @@ def chats():
                 
                 resp = fk.make_response(fk.redirect(fk.url_for("index")))
                 print(f"User {email} logged in with session: {session_id}")
-                # Note: In production with HTTPS, add secure=True
 
                 resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
                 resp.set_cookie("user_email", email, httponly=True, samesite="Strict")
@@ -365,5 +367,5 @@ def background_checker():
 if __name__ == "__main__":
 
 
-    #qrCodeGen.make_qr(" https://cgs3mzng.use.devtunnels.ms:5000", show=True, save_path="websiteqr.png")
+    qrCodeGen.make_qr("https://118ce87f29d4.ngrok-free.app", show=True, save_path="websiteqr.png")
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)

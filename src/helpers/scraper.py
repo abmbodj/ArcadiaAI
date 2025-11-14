@@ -8,11 +8,36 @@ from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from typing import Optional
 """Scrapes websites and returns their text content.
-This code is unused as of now but may be useful in the future.
-This code used to be used in place of websearch/webfetch tool to provide
-more up-to-date information about Arcadia University for the AI to use.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
 """
 
+
+"""Scrapes websites and returns their text content.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
+""""""Scrapes websites and returns their text content.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
+""""""Scrapes websites and returns their text content.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
+""""""Scrapes websites and returns their text content.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
+""""""Scrapes websites and returns their text content.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
+""""""Scrapes websites and returns their text content.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
+""""""Scrapes websites and returns their text content.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
+""""""Scrapes websites and returns their text content.
+This code is unused And will remain used due to the switch to tool calling.
+The only reason i am keeping it is so i dont have to re-write GemInterface to not use this file and in case i need a web scraper in the future.
+"""
 def scrape_website(url: str, timeout: Optional[int] = None) -> str:
     """
     Improved synchronous web scraper that:

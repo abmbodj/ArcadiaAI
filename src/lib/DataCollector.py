@@ -6,7 +6,8 @@ import os
 import json
 from datetime import datetime
 from typing import Optional
-
+"For the data science class I will probably remove this when the semester ends but for now it will help me collect data on how people are using ArchieAI "
+"and i will manipulate the data to find trends for my project"
 
 class DataCollector:
     """Collects and logs interaction data to JSON file."""

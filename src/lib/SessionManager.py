@@ -88,7 +88,7 @@ class SessionManager:
         return users[email].get("sessions", [])
     
     def create_session(self, user_email: Optional[str] = None) -> str:
-        """Create a new chat session with cryptographically secure ID."""
+        """Create a new chat session with a unique ID."""
         session_id = secrets.token_urlsafe(32)
         
         session_data = {
@@ -184,7 +184,9 @@ class SessionManager:
         if not os.path.exists(session_file):
             return False
         
-        # Remove from user's session list if applicable
+        # Remove from user's session list if applicable 
+        #At the time i wrote this i wasnt sure if i would be allowing guest sessions or not
+        #For the sake of time (and my sanity) i am keeping this in
         if user_email:
             users = self._load_users()
             if user_email in users and "sessions" in users[user_email]:

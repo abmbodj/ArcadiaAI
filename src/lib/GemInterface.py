@@ -76,6 +76,7 @@ class AiInterface:
 
 
 
+    #I dont think this is used anywhere but im keeping it just in case
 
     async def generate_text_streaming(self, prompt: str, system_prompt: str = "") -> AsyncIterator[str]:
         """
@@ -112,6 +113,8 @@ class AiInterface:
             if 'message' in chunk and 'content' in chunk['message']:
                 yield chunk['message']['content']
        
+    
+    #I dont think this is used anywhere but im keeping it just in case
     
     async def Archie(self, query: str, conversation_history: list = None) -> str:
         """
@@ -174,6 +177,7 @@ If the university data doesn't contain the information needed, or if the query r
         MODEL = os.getenv('OLLAMA_MODEL')
 
         # Normalize to OLLAMA_API_KEY for the Ollama client if the token was provided under OLLAMA_TOKEN.
+        # This took me way too long to figure out Headers are of the devil and there is no documentation on this.
         custom_headers = {
             "Authorization": f"Bearer {OLLAMA_API_KEY}"
         }
@@ -275,11 +279,11 @@ If the university data doesn't contain the information needed, or if the query r
                 role = msg.get("role", "user")
                 content = msg.get("content", "")
                 history_context += f"{role.upper()}: {content}\n"
-        
-        system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
+
+        system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University IN glenside pennsylvania. Do not mention Georgia or the arcadia university in georgia. You are here to help students, faculty, and staff with any questions they may have about the university.
 
 You are made by students for a final project. You must be factual and concise based on the information provided. All responses should be professional yet to the point.
-Markdown IS NOT SUPPORTED OR RENDERED in the final output. DO NOT RESPOND WITH MARKDOWN FORMATTING OR HYPERLINKS so no [links](url) formatting. however you can provide full URLs.
+Markdown IS NOT SUPPORTED OR RENDERED in the final output. DO NOT RESPOND WITH MARKDOWN FORMATTING OR HYPERLINKS so no [links](url) formatting or bolding. however you can provide full URLs.
 You are not associated with Arcadia University officially as you are a student project.
 History:
 {history_context}
